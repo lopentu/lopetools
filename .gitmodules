@@ -3,4 +3,4 @@
 	url = https://github.com/lopentu/CwnGraph.git
 [submodule "src/dwsd-beta"]
 	path = src/dwsd-beta
-	url = https://github.com/seantyh/dwsd-beta/tree/main
+	url = https://github.com/seantyh/dwsd-beta.git
