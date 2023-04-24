@@ -3,4 +3,5 @@ openai
 python-dotenv
 httpx
 opencc
+ipywidgets
 ./src/CwnGraph
