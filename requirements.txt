@@ -1,0 +1,6 @@
+langchain==0.0.147
+openai
+python-dotenv
+httpx
+opencc
+./src/CwnGraph

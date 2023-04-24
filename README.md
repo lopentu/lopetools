@@ -1,8 +1,19 @@
 # lope-tools
 
-To clone repo along with submodules, run `git clone --recursive git@github.com:lopentu/lopetools.git`
+To clone repo along with submodules, run 
+```bash
+git clone --recursive git@github.com:lopentu/lopetools.git
+```
 
-To install requirements, run `pip install -r requirements.txt`
+To install requirements, run 
 
-Don't forget to add `OPENAI_API_KEY` to `.env` if you want to use OpenAI models
+```bash
+pip install -r requirements.txt
+```
+
+Don't forget to create `.env` and add `OPENAI_API_KEY` to `.env` if you want to use OpenAI models:
+```bash
+OPENAI_API_KEY="<YOUR_KEY_HERE>"
+````
+
 
