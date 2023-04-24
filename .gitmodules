@@ -1,0 +1,6 @@
+[submodule "src/CwnGraph"]
+	path = src/CwnGraph
+	url = https://github.com/lopentu/CwnGraph.git
+[submodule "src/dwsd-beta"]
+	path = src/dwsd-beta
+	url = https://github.com/seantyh/dwsd-beta.git
