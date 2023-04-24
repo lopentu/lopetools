@@ -1,5 +1,7 @@
 # lope-tools
 
+To just look at usage examples, check out `notebooks/openai.ipynb`
+
 To clone repo along with submodules, run 
 ```bash
 git clone --recursive git@github.com:lopentu/lopetools.git
