@@ -17,7 +17,7 @@ from tagger_api.schemas import TagOutput
 cwn = CwnImage.load("v.2022.08.01")
 
 
-API_URL = "http://localhost:8000/api"
+API_URL = "http://140.112.147.128:8000/api"
 t2s = opencc.OpenCC("t2s.json")
 s2t = opencc.OpenCC("s2t.json")
 
