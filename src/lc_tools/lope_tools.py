@@ -14,7 +14,7 @@ from CwnGraph.cwn_types import CwnLemma
 
 from tagger_api.schemas import TagOutput
 
-cwn = CwnImage.load("v.2022.08.01")
+cwn = CwnImage.latest()
 
 
 API_URL = "http://140.112.147.128:8000/api"
