@@ -40,7 +40,8 @@ class SenseTagTool(BaseTool):
                 tmp = []
                 for tok in sent:
                     tmp.append(
-                        f"([詞] {tok['token']} || [詞性] {tok['tag']} || [詞意] {tok['gloss']})"  # type: ignore
+                        # type: ignore
+                        f"([詞] {tok['token']} || [詞性] {tok['tag']} || [詞意] {tok['gloss']})"
                         # f"([token] {tok['token']} || [gloss] {tok['gloss']})"
                     )
                 out.append("\n".join(tmp))
@@ -131,6 +132,14 @@ class QuerySenseFromExamplesTool(QuerySenseBaseTool):
         res = {}
         senses = cwn.find_senses(examples=text)
         for sense in senses:
+            # 原本一個sense的all_examples(list of strings)改成只收錄符合的例句們
+            new_examples = []
+            for example in sense.all_examples():
+                if re.search(text, example):
+                    new_examples.append(example)
+
+            sense.examples = new_examples
+
             res[sense.head_word] = self.expand_sense(sense)
 
         res = self.json_dumps(res)
