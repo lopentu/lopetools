@@ -228,6 +228,7 @@ sketch
 *.whl*
 models
 */data
+other_data
 .vscode
 packages
 **/__pycache__
