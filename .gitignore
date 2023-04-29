@@ -227,7 +227,7 @@ sketch
 .env
 *.whl*
 models
-data
+*/data
 .vscode
 packages
 **/__pycache__

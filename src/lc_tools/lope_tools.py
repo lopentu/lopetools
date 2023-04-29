@@ -137,10 +137,34 @@ class QuerySenseFromExamplesTool(QuerySenseBaseTool):
             for example in sense.all_examples():
                 if re.search(text, example):
                     new_examples.append(example)
+class QueryRelationsFromSenseIdTool(BaseTool, ToolMixin):
+    name = "QueryRelationsFromSenseId"
+    description = (
+        "輸入SenseID（8個數字） 得到目標詞義的關係（如同義詞、反義詞）。如果已經有了標註的文章，輸入文章中目標詞的SenseID。輸出為JSON格式。"
+    )
+    ignore = ["has_facet", "is_synset", "generic", "nearsynonym"]
 
-            sense.examples = new_examples
+    def _run(self, sense_id: str) -> str:
+        relations = cwn.from_sense_id(sense_id).relations
+        relations = [r for r in relations if r[0] not in self.ignore]
+        return self.json_dumps(relations)
 
-            res[sense.head_word] = self.expand_sense(sense)
+    async def _arun(self, sense_id: str) -> str:
+        relations = cwn.from_sense_id(sense_id).relations
+        relations = [r for r in relations if r[0] not in self.ignore]
+        return self.json_dumps(relations)
 
-        res = self.json_dumps(res)
-        return res
+
+class QueryAsbcSenseFrequencyTool(BaseTool, ToolMixin):
+    name = "QueryAsbcSenseFrequency"
+    description = "輸入Sense ID（8個數字）得到在中研院平衡語料庫（ASBC）中出現目標詞的詞義頻率。"
+
+    def _run(self, sense_id: str) -> str:
+        if sense_id not in asbc_freq:
+            return self.json_dumps({"sense_info": "查無此詞義。"})
+        return self.json_dumps({"sense_info": asbc_freq[sense_id]})
+
+    async def _arun(self, sense_id: str) -> str:
+        if sense_id not in asbc_freq:
+            return self.json_dumps({"sense_info": "查無此詞義。"})
+        return self.json_dumps({"sense_info": asbc_freq[sense_id]})
