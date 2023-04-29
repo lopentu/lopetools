@@ -5,31 +5,57 @@ import sys
 if "../tagger_api" not in sys.path:
     sys.path.append("../tagger_api")
 import json
+import re
 
 import httpx
 from langchain.tools import BaseTool
 import opencc
 from CwnGraph import CwnImage
-from CwnGraph.cwn_types import CwnLemma
 
 from tagger_api.schemas import TagOutput
 
 cwn = CwnImage.latest()
-
+with open("../data/senseid_to_metadata.json", "r") as f:
+    asbc_freq = json.load(f)
 
 API_URL = "http://140.112.147.128:8000/api"
 t2s = opencc.OpenCC("t2s.json")
 s2t = opencc.OpenCC("s2t.json")
 
 
-class SenseTagTool(BaseTool):
-    # name = "词意标注工具"
+class ToolMixin:
+    def json_dumps(self, d: dict) -> str:
+        return json.dumps(d, default=str, ensure_ascii=False)
+
+
+class SenseTagTool(BaseTool, ToolMixin):
     name = "SenseTagger"
-    # description = "Get Chinese word senses for a given text"
-    description = "輸入文章可以斷詞和標註詞義"
+    description = "輸入文章可以斷詞和標註詞性SenseID和詞義，輸出為JSON格式。"
+
+    def format_text(self, token_dict: dict) -> str | dict:
+        token = token_dict["token"]
+        tag = token_dict["tag"]
+        gloss = token_dict["gloss"]
+
+        gloss = re.sub(r"\(\d\.\d{4}\)", "", gloss)  # remove probability at the end
+        m = re.search(r"\[(?P<sense_id>\d{8})\] (?P<gloss>.+。)", gloss)
+        if not m:
+            sense_id = "NONE"
+            gloss = "NONE"
+        else:
+            sense_id = m.group("sense_id")
+            gloss = m.group("gloss")
+            # gloss = f"[SenseID] {m.group('sense_id')} || [詞意] {m.group('gloss')}"
+
+        return {
+            "詞": token,
+            "詞性": tag,
+            "SenseID": sense_id,
+            "詞意": gloss,
+        }
+        # return f"([詞] {token} || [詞性] {tag} || {gloss})"
 
     def _run(self, text: str) -> str:
-        # text = s2t.convert(text)
         with httpx.Client() as client:
             out = []
             response: TagOutput = client.get(
@@ -41,34 +67,61 @@ class SenseTagTool(BaseTool):
                 for tok in sent:
                     tmp.append(
                         # type: ignore
-                        f"([詞] {tok['token']} || [詞性] {tok['tag']} || [詞意] {tok['gloss']})"
-                        # f"([token] {tok['token']} || [gloss] {tok['gloss']})"
+                        self.format_text(tok)
+                        # f"([詞] {tok['token']} || [詞性] {tok['tag']} || [詞意] {tok['gloss']})"
+                    )
+                # out.append("\n".join(tmp))
+                out.append(tmp)
+
+            # out = "。".join(out)
+            return self.json_dumps(out)
+
+    async def _arun(self, text: str) -> str:
+        async with httpx.AsyncClient() as client:
+            out = []
+            response: TagOutput = (
+                await client.get(
+                    f"{API_URL}/tag/",
+                    params={"text": text},
+                )
+            ).json()["tagged_text"]
+            for sent in response:
+                tmp = []
+                for tok in sent:
+                    tmp.append(
+                        # type: ignore
+                        self.format_text(tok)
+                        # f"([詞] {tok['token']} || [詞性] {tok['tag']} || [詞意] {tok['gloss']})"
                     )
                 out.append("\n".join(tmp))
 
-            out = "。".join(out)
-            # out = t2s.convert(out)
-            return out
-            # return t2s.convert(json.dumps(response, ensure_ascii=False))
-
-    async def _arun(self, text: str) -> str:
-        raise NotImplementedError
+            # out = "。".join(out)
+            return self.json_dumps(out)
 
 
-class QuerySenseBaseTool(BaseTool):
+class QuerySenseBaseTool(BaseTool, ToolMixin):
+    def _base_run(self, text: str, search_method: str) -> str:
+        res = {}
+        senses = cwn.find_senses(**{search_method: text})
+        for sense in senses:
+            res[sense.head_word] = self.expand_sense(sense)
+
+        res = self.json_dumps(res)
+        return res
+
+    async def _base_arun(self, text, search_method: str) -> str:
+        res = {}
+        senses = cwn.find_senses(**{search_method: text})
+        for sense in senses:
+            res[sense.head_word] = self.expand_sense(sense)
+
+        res = self.json_dumps(res)
+        return res
+
     @staticmethod
     def expand_sense(sense):
         res = {}
-        ignore = [
-            "create",
-            "cgu",
-            "all_relations",
-            "relations",
-            "lemmas",
-            "data",
-            "synset",
-        ]
-        keep = ["definition", "all_examples", "facets", "head_word"]
+        keep = ["definition", "all_examples", "facets", "head_word", "id", "pos"]
         attrs = [
             d
             for d in dir(sense)
@@ -80,63 +133,70 @@ class QuerySenseBaseTool(BaseTool):
                 continue
             if callable(retrieved):
                 retrieved = retrieved()
-            # if attr in ["facets", "hypernym", "hyponym", "semantic_relations"]:
-            # for r in retrieved:
-
-            #     if isinstance(r, collections.Iterable):
-            #     res[attr] = expand_sense(r)
             res[attr] = retrieved
 
         return res
 
-    def _arun(self):
-        raise NotImplementedError
-
-    def json_dumps(self, d: dict) -> str:
-        return json.dumps(d, default=str, ensure_ascii=False)
-
 
 class QuerySenseFromLemmaTool(QuerySenseBaseTool):
     name = "QuerySensesFromLemma"
-    description = "搜尋在詞條中出現目標詞的詞義，可以使用Regular Expression。"
+    description = "搜尋在CWN詞條中出現目標詞的詞義，可以使用Regular Expression。輸出為JSON格式。"
 
     def _run(self, text: str) -> str:
-        res = {}
-        senses = cwn.find_senses(lemma=text)
-        for sense in senses:
-            res[sense.head_word] = self.expand_sense(sense)
+        res = self._base_run(text, "lemma")
+        return res
 
-        res = self.json_dumps(res)
+    async def _arun(self, text: str) -> str:
+        res = await self._base_arun(text, "lemma")
         return res
 
 
 class QuerySenseFromDefinitionTool(QuerySenseBaseTool):
     name = "QuerySensesFromDefinition"
-    description = "搜尋在定義中出現目標詞的詞義，可以使用Regular Expression。"
+    description = "搜尋在CWN定義中出現目標詞的詞義，可以使用Regular Expression。輸出為JSON格式。"
 
     def _run(self, text: str) -> str:
-        res = {}
-        senses = cwn.find_senses(definition=text)
-        for sense in senses:
-            res[sense.head_word] = self.expand_sense(sense)
+        res = self._base_run(text, "definition")
+        return res
 
-        res = self.json_dumps(res)
+    async def _arun(self, text: str) -> str:
+        res = await self._base_arun(text, "definition")
         return res
 
 
 class QuerySenseFromExamplesTool(QuerySenseBaseTool):
     name = "QuerySensesFromExample"
-    description = "搜尋在例句中出現目標詞的詞義，可以使用Regular Expression。"
+    description = "搜尋在CWN例句中出現目標詞的詞義，可以使用Regular Expression。輸出為JSON格式。"
 
     def _run(self, text: str) -> str:
-        res = {}
-        senses = cwn.find_senses(examples=text)
-        for sense in senses:
+        res = json.loads(self._base_run(text, "examples"))
+        for k, v in res.items():
+            all_examples = v["all_examples"]
             # 原本一個sense的all_examples(list of strings)改成只收錄符合的例句們
             new_examples = []
-            for example in sense.all_examples():
+            for example in all_examples:
                 if re.search(text, example):
                     new_examples.append(example)
+            v["all_examples"] = new_examples
+            res[k] = v
+
+        return self.json_dumps(res)
+
+    async def _arun(self, text: str) -> str:
+        res = json.loads(await self._base_arun(text, "examples"))
+        for k, v in res.items():
+            all_examples = v["all_examples"]
+            # 原本一個sense的all_examples(list of strings)改成只收錄符合的例句們
+            new_examples = []
+            for example in all_examples:
+                if re.search(text, example):
+                    new_examples.append(example)
+            v["all_examples"] = new_examples
+            res[k] = v
+
+        return self.json_dumps(res)
+
+
 class QueryRelationsFromSenseIdTool(BaseTool, ToolMixin):
     name = "QueryRelationsFromSenseId"
     description = (
