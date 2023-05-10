@@ -1,0 +1,10 @@
+# https://docs.streamlit.io/library/advanced-features/configuration
+[server]
+port = 8001
+baseUrlPath = "/lopeGPT"
+enableCORS = false
+enableXsrfProtection = false
+runOnSave = true
+
+[theme]
+base = "light"

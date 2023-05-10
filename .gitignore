@@ -232,3 +232,4 @@ other_data
 .vscode
 packages
 **/__pycache__
+web/
