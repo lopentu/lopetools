@@ -142,7 +142,7 @@ class QuerySenseBaseTool(BaseTool, ToolMixin):
 
 class QuerySenseFromLemmaTool(QuerySenseBaseTool):
     name = "QuerySensesFromLemma"
-    description = "搜尋在CWN詞條中出現目標詞的詞義，可以使用Regular Expression。輸出為JSON格式。"
+    description = "搜尋CWN所有詞義，找到lemma符合目標詞的數個詞義，可以使用Regular Expression。輸出為JSON格式。"
 
     def _run(self, text: str) -> str:
         res = self._base_run(text, "lemma")
@@ -155,7 +155,7 @@ class QuerySenseFromLemmaTool(QuerySenseBaseTool):
 
 class QuerySenseFromDefinitionTool(QuerySenseBaseTool):
     name = "QuerySensesFromDefinition"
-    description = "搜尋在CWN定義中出現目標詞的詞義，可以使用Regular Expression。輸出為JSON格式。"
+    description = "搜尋CWN所有詞義，找到definition有出現目標詞的數個詞義，可以使用Regular Expression。輸出為JSON格式。"
 
     def _run(self, text: str) -> str:
         res = self._base_run(text, "definition")
@@ -168,7 +168,7 @@ class QuerySenseFromDefinitionTool(QuerySenseBaseTool):
 
 class QuerySenseFromExamplesTool(QuerySenseBaseTool):
     name = "QuerySensesFromExample"
-    description = "搜尋在CWN例句中出現目標詞的詞義，可以使用Regular Expression。輸出為JSON格式。"
+    description = "搜尋CWN所有詞義，找到例句有出現目標詞的數個詞義，可以使用Regular Expression。輸出為JSON格式。"
 
     def _run(self, text: str) -> str:
         res = json.loads(self._base_run(text, "examples"))
@@ -202,7 +202,7 @@ class QuerySenseFromExamplesTool(QuerySenseBaseTool):
 class QueryRelationsFromSenseIdTool(BaseTool, ToolMixin):
     name = "QueryRelationsFromSenseId"
     description = (
-        "輸入SenseID（8個數字） 得到目標詞義的關係（如同義詞、反義詞）。如果已經有了標註的文章，輸入文章中目標詞的SenseID。輸出為JSON格式。"
+        "輸入目標詞的SenseID（8位數字） ，得到目標詞的relations（如同義詞、反義詞等語意關係）。如果已經有標記過的文章，則輸入文章中目標詞的SenseID，得到目標詞的relations（如同義詞、反義詞等語意關係）。輸出為JSON格式。"
     )
     ignore = ["has_facet", "is_synset", "generic", "nearsynonym"]
 
@@ -219,7 +219,7 @@ class QueryRelationsFromSenseIdTool(BaseTool, ToolMixin):
 
 class QueryAsbcSenseFrequencyTool(BaseTool, ToolMixin):
     name = "QueryAsbcSenseFrequency"
-    description = "輸入Sense ID（8個數字）得到在中研院平衡語料庫（ASBC）中出現目標詞的詞義頻率。"
+    description = "輸入目標詞義的Sense ID（8個數字），得到目標詞義在中研院平衡語料庫（ASBC）的詞義頻率。"
 
     def _run(self, sense_id: str) -> str:
         if sense_id not in asbc_freq:
