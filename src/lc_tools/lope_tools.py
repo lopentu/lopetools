@@ -61,6 +61,7 @@ class SenseTagTool(BaseTool, ToolMixin):
             response: TagOutput = client.get(
                 f"{API_URL}/tag/",
                 params={"text": text},
+                    timeout=600.0
             ).json()["tagged_text"]
             for sent in response:
                 tmp = []
@@ -83,6 +84,7 @@ class SenseTagTool(BaseTool, ToolMixin):
                 await client.get(
                     f"{API_URL}/tag/",
                     params={"text": text},
+                    timeout=600.0
                 )
             ).json()["tagged_text"]
             for sent in response:
@@ -102,7 +104,7 @@ class SenseTagTool(BaseTool, ToolMixin):
 class QuerySenseBaseTool(BaseTool, ToolMixin):
     def _base_run(self, text: str, search_method: str) -> str:
         res = {}
-        senses = cwn.find_senses(**{search_method: text})
+        senses = cwn.find_senses(**{search_method: f"^{text}$"})
         for sense in senses:
             res[sense.head_word] = self.expand_sense(sense)
 
