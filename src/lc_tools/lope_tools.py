@@ -202,7 +202,7 @@ class QuerySenseFromExamplesTool(QuerySenseBaseTool):
 class QueryRelationsFromSenseIdTool(BaseTool, ToolMixin):
     name = "QueryRelationsFromSenseId"
     description = (
-        "輸入目標詞的SenseID（8位數字） ，得到目標詞的relations（如同義詞、反義詞等語意關係）。如果已經有標記過的文章，則輸入文章中目標詞的SenseID，得到目標詞的relations（如同義詞、反義詞等語意關係）。輸出為JSON格式。"
+        "輸入目標詞的SenseID（8位數字） ，得到目標詞的relations，取得特定的語意關係（synonym同義詞、antonym反義詞、hypernym上位詞、hyponym下位詞）。如果已經有標記過的文章，則使用文章中目標詞的SenseID，再去獲得該SenseID的relations。輸出為JSON格式。"
     )
     ignore = ["has_facet", "is_synset", "generic", "nearsynonym"]
 
