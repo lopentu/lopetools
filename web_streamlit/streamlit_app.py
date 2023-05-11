@@ -96,7 +96,7 @@ with st.sidebar:
     )
     use_cwn_tools = st.checkbox("CWN Tools", value=True)
     # use_asbc_tools = st.checkbox("ASBC Tools")
-    use_cwn_tools = False
+    use_asbc_tools = False
     use_file = st.empty()
 
 st.session_state.setdefault("chat_history", [])
