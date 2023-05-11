@@ -233,3 +233,5 @@ other_data
 packages
 **/__pycache__
 web/
+scripts/
+other_notebooks/

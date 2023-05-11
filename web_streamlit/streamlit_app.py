@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 import re
@@ -14,16 +15,11 @@ from langchain.chat_models import ChatOpenAI
 from langchain.agents import initialize_agent, AgentType, Tool, create_csv_agent
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationTokenBufferMemory
-from langchain.prompts import (
-    ChatPromptTemplate,
-    PromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
 from langchain.schema import messages_from_dict, messages_to_dict
-from llama_index.indices.struct_store import GPTPandasIndex
+from llama_index import Document, GPTVectorStoreIndex
 import openai
 import pandas as pd
+from PIL import Image
 import streamlit as st
 from streamlit_chat import message
 
@@ -37,7 +33,7 @@ from lope_tools import (
 )
 
 CWN_TOOLS = [
-    SenseTagTool(),
+    SenseTagTool(return_direct=True),
     QuerySenseFromDefinitionTool(),
     QuerySenseFromLemmaTool(),
     QuerySenseFromExamplesTool(),
@@ -47,43 +43,75 @@ CWN_TOOLS = [
 
 UPLOAD_TOOLS = []
 
-pandas_index = None
+upload_index = None
 
 ASBC_TOOLS = []
 
+os.environ["TIKTOKEN_CACHE_DIR"] = ""
 BASE = Path(__file__).resolve().parent.parent
 load_dotenv(str(BASE / ".env"))
 openai.api_key = os.environ["OPENAI_API_KEY"]
-# conversation = ConversationChain(memory=memory, llm=llm)
+sheep = Image.open("./static/羊.png")
 
-st.title("LOPE Tools")
+
+def img_to_bytes(img_path):
+    img_bytes = Path(img_path).read_bytes()
+    encoded = base64.b64encode(img_bytes).decode()
+    return encoded
+
+
+def img_to_html(img_path):
+    img_html = "<img src='data:image/png;base64,{}' class='img-fluid'>".format(
+        img_to_bytes(img_path)
+    )
+    return img_html
+
+
+st.set_page_config("LopeGPT", page_icon=sheep, layout="wide")
 col1, col2, col3 = st.columns(3)
 tool_options = ["CWN Tools", "ASBC Tools"]
 # options = st.multiselect("Choose tools", tool_options, help="Choose your tools")
 
 with col1:
-    use_cwn_tools = st.checkbox("CWN Tools", value=True)
+    st.markdown(
+        "<h1 style='text-align: center;'>CWN</h1>",
+        unsafe_allow_html=True,
+    )
 with col2:
-    use_asbc_tools = st.checkbox("ASBC Tools")
+    st.markdown(
+        "<p style='text-align: center; color: black;'>"
+        + img_to_html("./static/羊.png")
+        + "</p>",
+        unsafe_allow_html=True,
+    )
 with col3:
+    st.markdown(
+        "<h1 style='text-align: center;'>GPT</h1>",
+        unsafe_allow_html=True,
+    )
+
+with st.sidebar:
+    your_data = st.file_uploader(
+        "Upload your data. Must contain 'Content' column.", type=["csv"]
+    )
+    use_cwn_tools = st.checkbox("CWN Tools", value=True)
+    use_asbc_tools = st.checkbox("ASBC Tools")
     use_file = st.empty()
 
-your_data = st.sidebar.file_uploader(
-    "Upload your data. Must contain 'Content' column.", type=["csv"]
-)
-
 st.session_state.setdefault("chat_history", [])
-st.session_state.setdefault("your_data", [])
+st.session_state.setdefault("upload_data", [])
 history = st.session_state["chat_history"]
 print("#" * 10, "history", "#" * 10)
 print(history)
 
 
 class LopeAgent:
-    # SUFFIX = "不要做額外的分析。在答案前面一定要附上 'Final Answer'"
-    SUFFIX = """注意一：'action_input'只輸入字串，不要輸入JSON格式或其他的。
-    注意二：在答案前面一定要附上 'Final Answer'。
-    注意三：有了答案之後，不要做額外的分析。"""
+    SUFFIX = """注意一：'action_input'只輸入字串，不要輸入JSON格式或其他的格式。
+    注意二：有了答案之後，不要做額外的分析。"""
+    # SUFFIX = """注意一：'action_input'只輸入字串，不要輸入JSON格式或其他的格式。
+    # 注意二：每個答復的前面一定要附上['Question: ', 'Thought: ', 'Action: ', 'Final Answer: '] 的其中之一。
+    # 注意二：在最終答案前面一定要附上 'Final Answer'。
+    # 注意三：有了答案之後，不要做額外的分析。"""
 
     def __init__(self, tools):
         self.tools = tools
@@ -93,10 +121,13 @@ class LopeAgent:
             client=None,
             # stop=["Human: "],  # type: ignore
         )
-        self.memory = ConversationTokenBufferMemory(llm=self.llm, max_token_limit=3000)
+        self.memory = ConversationTokenBufferMemory(
+            llm=self.llm,
+            max_token_limit=3000,
+            return_messages=True,
+            memory_key="chat_history",
+        )
         self.load_messages()
-        # if use_file:
-        #     self.agent_chain = create_csv_agent(self.llm, st.session_state["your_data"])
         if not tools:
             self.agent_chain = ConversationChain(
                 memory=self.memory,
@@ -108,8 +139,10 @@ class LopeAgent:
                 tools=tools,
                 memory=self.memory,
                 llm=self.llm,
-                agent=AgentType.CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+                # agent=AgentType.CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+                agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
                 verbose=True,
+                max_iterations=5
             )
 
     def __call__(self, text):
@@ -118,8 +151,11 @@ class LopeAgent:
                 self.agent_chain.predict(input=text)
             else:
                 text += self.SUFFIX
-                self.agent_chain.run(text)
-        except:
+                self.agent_chain.run(input=text)
+        except Exception as e:
+            print("########## EXCEPTION ##########")
+            print(e)
+            self.memory.chat_memory.add_user_message(text)
             self.memory.chat_memory.add_ai_message("對不起我無法回答您的問題。")
         self.save_messages()
 
@@ -138,7 +174,8 @@ def format_chat_messages(messages) -> list[dict[str, str]]:
         out.append(
             {
                 "role": m["type"],
-                "text": re.sub(LopeAgent.SUFFIX, "", m["data"]["content"]),
+                # "text": re.sub(LopeAgent.SUFFIX, "", m["data"]["content"]),
+                "text": m["data"]["content"].replace(LopeAgent.SUFFIX, "").strip(),
             }
         )
     return out
@@ -153,8 +190,8 @@ def on_form_submit():
         tools += CWN_TOOLS
     if use_asbc_tools:
         tools += ASBC_TOOLS
-    # if use_file:
-    #     tools += UPLOAD_TOOLS
+    if use_file:
+        tools += UPLOAD_TOOLS
     agent = LopeAgent(tools=tools)
     with st.spinner("Thinking..."):
         agent(txt)
@@ -196,19 +233,28 @@ def format_tagged(tagged_text: list[dict]):
     )
 
 
-def process_upload(data):
-    global pandas_index
+def process_upload(data, limit_docs=1):
+    global upload_index
     global UPLOAD_TOOLS
-    use_file.checkbox(data.name)
+    use_file.checkbox(data.name, value=True)
     st.session_state["your_data"] = data
     df = pd.read_csv(data)
-    # pandas_index = GPTPandasIndex(df=df)
+    if limit_docs:
+        documents = [Document(doc) for doc in df["Content"].tolist()[:limit_docs]]
+    else:
+        documents = [Document(doc) for doc in df["Content"].tolist()]
+    upload_index = GPTVectorStoreIndex.from_documents(documents=documents)
 
-    # UPLOAD_TOOLS.append(Tool(
-    #     name="File Index",
-    #     func=lambda q: str(pandas_index.as_query_engine().query(q)),
-    #     description="回答關於上傳檔案的資訊",
-    # ))
+    UPLOAD_TOOLS.append(
+        Tool(
+            name="Document Index",
+            func=lambda q: str(upload_index.as_query_engine().query(q)),
+            # description="提供使用者個人資料索引功能。沒有提供額外的metadata。",
+            description="索引使用者的文件的內容。沒有提供額外的metadata。",
+            # description="useful for answering questions about the user's data",
+            return_direct=True,
+        )
+    )
     # content = df['Content'].tolist()
     # tagged = [json.loads(SenseTagTool().run(c)) for c in content]
     # res = []
