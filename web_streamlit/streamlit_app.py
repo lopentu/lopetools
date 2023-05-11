@@ -12,11 +12,16 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from langchain.chat_models import ChatOpenAI
-from langchain.agents import initialize_agent, AgentType, Tool, create_csv_agent
+from langchain.agents import initialize_agent, AgentType, Tool
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationTokenBufferMemory
 from langchain.schema import messages_from_dict, messages_to_dict
-from llama_index import Document, GPTVectorStoreIndex
+from llama_index import (
+    Document,
+    GPTVectorStoreIndex,
+    StorageContext,
+    load_index_from_storage,
+)
 import openai
 import pandas as pd
 from PIL import Image
@@ -33,28 +38,28 @@ from lope_tools import (
     QuerySimilarSenseFromCwnTool,
 )
 
-CWN_TOOLS = [
-    SenseTagTool(return_direct=True),
-    QuerySenseFromDefinitionTool(),
-    QuerySenseFromLemmaTool(),
-    QuerySenseFromExamplesTool(),
-    QueryAsbcSenseFrequencyTool(),
-    QueryRelationsFromSenseIdTool(),
-    QuerySimilarSenseFromCwnTool(return_direct=True),
-]
-
-UPLOAD_TOOLS = []
-
-upload_index = None
-
-ASBC_TOOLS = []
-
 os.environ["TIKTOKEN_CACHE_DIR"] = ""
 BASE = Path(__file__).resolve().parent.parent
 load_dotenv(str(BASE / ".env"))
 openai.api_key = os.environ["OPENAI_API_KEY"]
+
 sheep = Image.open("./static/羊.png")
 
+st.set_page_config("LopeGPT", page_icon=sheep, layout="wide")
+
+@st.cache_resource
+def load_demo_index(path):
+    storage_context = StorageContext.from_defaults(persist_dir=path)
+    index = load_index_from_storage(storage_context)
+    tool = Tool(
+        name="Document Index",
+        func=lambda q: str(index.as_query_engine().query(q)),
+        # description="提供使用者個人資料索引功能。沒有提供額外的metadata。",
+        description="索引使用者的文件的內容。沒有提供額外的metadata。",
+        # description="useful for answering questions about the user's data",
+        return_direct=True,
+    )
+    return tool
 
 def img_to_bytes(img_path):
     img_bytes = Path(img_path).read_bytes()
@@ -68,8 +73,24 @@ def img_to_html(img_path):
     )
     return img_html
 
+CWN_TOOLS = [
+    SenseTagTool(return_direct=True),
+    QuerySenseFromDefinitionTool(),
+    QuerySenseFromLemmaTool(),
+    QuerySenseFromExamplesTool(),
+    QueryAsbcSenseFrequencyTool(),
+    QueryRelationsFromSenseIdTool(),
+    QuerySimilarSenseFromCwnTool(return_direct=True),
+]
 
-st.set_page_config("LopeGPT", page_icon=sheep, layout="wide")
+ASBC_TOOLS = []
+
+upload_index = load_demo_index(str(BASE / "other_data/.llama_storage"))
+UPLOAD_TOOLS = [
+    upload_index
+]
+
+
 col1, col2, col3 = st.columns(3)
 tool_options = ["CWN Tools", "ASBC Tools"]
 # options = st.multiselect("Choose tools", tool_options, help="Choose your tools")
@@ -99,6 +120,7 @@ with st.sidebar:
     use_cwn_tools = st.checkbox("CWN Tools", value=True)
     # use_asbc_tools = st.checkbox("ASBC Tools")
     use_asbc_tools = False
+    use_demo_file = st.checkbox("textbook.csv", value=True)
     use_file = st.empty()
 
 st.session_state.setdefault("chat_history", [])
@@ -136,6 +158,7 @@ class LopeAgent:
                 memory=self.memory,
                 llm=self.llm,
                 verbose=True,
+                max_iterations=8,
             )
         else:
             self.agent_chain = initialize_agent(
@@ -145,7 +168,7 @@ class LopeAgent:
                 # agent=AgentType.CHAT_ZERO_SHOT_REACT_DESCRIPTION,
                 agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
                 verbose=True,
-                max_iterations=5
+                max_iterations=8,
             )
 
     def __call__(self, text):
@@ -193,7 +216,7 @@ def on_form_submit():
         tools += CWN_TOOLS
     if use_asbc_tools:
         tools += ASBC_TOOLS
-    if use_file:
+    if use_file or use_demo_file:
         tools += UPLOAD_TOOLS
     agent = LopeAgent(tools=tools)
     with st.spinner("Thinking..."):
@@ -236,18 +259,15 @@ def format_tagged(tagged_text: list[dict]):
     )
 
 
-def process_upload(data, limit_docs=1):
+def build_file_index(df, limit_docs=None):
     global upload_index
     global UPLOAD_TOOLS
-    use_file.checkbox(data.name, value=True)
-    st.session_state["your_data"] = data
-    df = pd.read_csv(data)
     if limit_docs:
         documents = [Document(doc) for doc in df["Content"].tolist()[:limit_docs]]
     else:
         documents = [Document(doc) for doc in df["Content"].tolist()]
     upload_index = GPTVectorStoreIndex.from_documents(documents=documents)
-
+    UPLOAD_TOOLS = []
     UPLOAD_TOOLS.append(
         Tool(
             name="Document Index",
@@ -258,6 +278,14 @@ def process_upload(data, limit_docs=1):
             return_direct=True,
         )
     )
+    return upload_index, UPLOAD_TOOLS
+
+
+def process_upload(data, limit_docs=None):
+    use_file.checkbox(data.name, value=True)
+    st.session_state["your_data"] = data
+    df = pd.read_csv(data)
+    build_file_index(df, limit_docs=limit_docs)
     # content = df['Content'].tolist()
     # tagged = [json.loads(SenseTagTool().run(c)) for c in content]
     # res = []
