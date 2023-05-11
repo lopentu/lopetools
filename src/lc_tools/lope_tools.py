@@ -1,11 +1,15 @@
 # https://python.langchain.com/en/latest/modules/agents/tools/custom_tools.html#multi-argument-tools
 # https://cwngraph.readthedocs.io/en/latest/
+import pickle
+from pathlib import Path
 import sys
 
 if "../tagger_api" not in sys.path:
     sys.path.append("../tagger_api")
 import json
 import re
+import torch
+from sentence_transformers import SentenceTransformer, util
 
 import httpx
 from langchain.tools import BaseTool
@@ -21,10 +25,17 @@ with open("../data/senseid_to_metadata.json", "r") as f:
 API_URL = "http://140.112.147.128:8000/api"
 t2s = opencc.OpenCC("t2s.json")
 s2t = opencc.OpenCC("s2t.json")
+BASE = Path(__file__).resolve().parent.parent.parent
+embedder = SentenceTransformer("distiluse-base-multilingual-cased-v1")
+p = str(BASE / 'other_data/cwn_definition_embeddings.pkl')
+with open(p, 'rb') as f:
+    data = pickle.load(f)
+    def_corpus = data['corpus']
+    def_embeddings = data['embeddings']
 
 
 class ToolMixin:
-    def json_dumps(self, d: dict) -> str:
+    def json_dumps(self, d: dict|list) -> str:
         return json.dumps(d, default=str, ensure_ascii=False)
 
 
@@ -59,9 +70,7 @@ class SenseTagTool(BaseTool, ToolMixin):
         with httpx.Client() as client:
             out = []
             response: TagOutput = client.get(
-                f"{API_URL}/tag/",
-                params={"text": text},
-                    timeout=600.0
+                f"{API_URL}/tag/", params={"text": text}, timeout=600.0
             ).json()["tagged_text"]
             for sent in response:
                 tmp = []
@@ -82,9 +91,7 @@ class SenseTagTool(BaseTool, ToolMixin):
             out = []
             response: TagOutput = (
                 await client.get(
-                    f"{API_URL}/tag/",
-                    params={"text": text},
-                    timeout=600.0
+                    f"{API_URL}/tag/", params={"text": text}, timeout=600.0
                 )
             ).json()["tagged_text"]
             for sent in response:
@@ -201,9 +208,7 @@ class QuerySenseFromExamplesTool(QuerySenseBaseTool):
 
 class QueryRelationsFromSenseIdTool(BaseTool, ToolMixin):
     name = "QueryRelationsFromSenseId"
-    description = (
-        "輸入目標詞的SenseID（8位數字） ，得到目標詞的relations，取得特定的語意關係（synonym同義詞、antonym反義詞、hypernym上位詞、hyponym下位詞）。如果已經有標記過的文章，則使用文章中目標詞的SenseID，再去獲得該SenseID的relations。輸出為JSON格式。"
-    )
+    description = "輸入目標詞的SenseID（8位數字） ，得到目標詞的relations，取得特定的語意關係（synonym同義詞、antonym反義詞、hypernym上位詞、hyponym下位詞）。如果已經有標記過的文章，則使用文章中目標詞的SenseID，再去獲得該SenseID的relations。輸出為JSON格式。"
     ignore = ["has_facet", "is_synset", "generic", "nearsynonym"]
 
     def _run(self, sense_id: str) -> str:
@@ -230,3 +235,27 @@ class QueryAsbcSenseFrequencyTool(BaseTool, ToolMixin):
         if sense_id not in asbc_freq:
             return self.json_dumps({"sense_info": "查無此詞義。"})
         return self.json_dumps({"sense_info": asbc_freq[sense_id]})
+
+
+class QuerySimilarSenseFromCwnTool(BaseTool, ToolMixin):
+    name = "QuerySimilarSenseFromCwn"
+    description = "輸入釋義，得到在中研院平衡語料庫（ASBC）與目釋義相似的詞義。輸出為JSON格式。"
+
+    def _run(self, query: str) -> str:
+        query_embedding = embedder.encode(query, convert_to_tensor=True)
+        cos_scores = util.cos_sim(query_embedding, def_embeddings)[0]
+        top_results = torch.topk(cos_scores, k=10)
+        res = []
+        for score, idx in zip(top_results.values, top_results.indices):
+            res.append({**def_corpus[idx], 'score': float(score)})
+        return self.json_dumps(res)
+
+    async def _arun(self, query: str) -> str:
+        query_embedding = embedder.encode(query, convert_to_tensor=True)
+        cos_scores = util.cos_sim(query_embedding, def_embeddings)[0]
+        top_results = torch.topk(cos_scores, k=10)
+        res = []
+        for score, idx in zip(top_results.values, top_results.indices):
+            res.append({**def_corpus[idx], **{'score': float(score)}})
+        return self.json_dumps(res)
+

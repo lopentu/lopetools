@@ -30,6 +30,7 @@ from lope_tools import (
     QuerySenseFromExamplesTool,
     QueryAsbcSenseFrequencyTool,
     QueryRelationsFromSenseIdTool,
+    QuerySimilarSenseFromCwnTool,
 )
 
 CWN_TOOLS = [
@@ -39,6 +40,7 @@ CWN_TOOLS = [
     QuerySenseFromExamplesTool(),
     QueryAsbcSenseFrequencyTool(),
     QueryRelationsFromSenseIdTool(),
+    QuerySimilarSenseFromCwnTool(return_direct=True),
 ]
 
 UPLOAD_TOOLS = []
