@@ -36,6 +36,7 @@ from lope_tools import (
     QueryAsbcSenseFrequencyTool,
     QueryRelationsFromSenseIdTool,
     QuerySimilarSenseFromCwnTool,
+    # QueryAsbcFullTextTool
 )
 
 os.environ["TIKTOKEN_CACHE_DIR"] = ""
@@ -45,7 +46,7 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 
 sheep = Image.open("./static/羊.png")
 
-st.set_page_config("LopeGPT", page_icon=sheep, layout="wide")
+st.set_page_config("LOPEGPT", page_icon=sheep, layout="wide")
 
 @st.cache_resource
 def load_demo_index(path):
@@ -81,6 +82,7 @@ CWN_TOOLS = [
     QueryAsbcSenseFrequencyTool(),
     QueryRelationsFromSenseIdTool(),
     QuerySimilarSenseFromCwnTool(return_direct=True),
+    # QueryAsbcFullTextTool(return_direct=True),
 ]
 
 ASBC_TOOLS = []
@@ -130,7 +132,7 @@ print("#" * 10, "history", "#" * 10)
 print(history)
 
 
-class LopeAgent:
+class LOPEAgent:
     SUFFIX = """注意一：'action_input'只輸入字串，不要輸入JSON格式或其他的格式。
     注意二：有了答案之後，不要做額外的分析。"""
     # SUFFIX = """注意一：'action_input'只輸入字串，不要輸入JSON格式或其他的格式。
@@ -178,12 +180,14 @@ class LopeAgent:
             else:
                 text += self.SUFFIX
                 self.agent_chain.run(input=text)
+                # output = json.loads(self.agent_chain.run(input=text))
         except Exception as e:
             print("########## EXCEPTION ##########")
             print(e)
             self.memory.chat_memory.add_user_message(text)
             self.memory.chat_memory.add_ai_message("對不起我無法回答您的問題。")
         self.save_messages()
+        # return output
 
     def save_messages(self):
         messages = messages_to_dict(self.memory.chat_memory.messages)
@@ -201,7 +205,7 @@ def format_chat_messages(messages) -> list[dict[str, str]]:
             {
                 "role": m["type"],
                 # "text": re.sub(LopeAgent.SUFFIX, "", m["data"]["content"]),
-                "text": m["data"]["content"].replace(LopeAgent.SUFFIX, "").strip(),
+                "text": m["data"]["content"].replace(LOPEAgent.SUFFIX, "").strip(),
             }
         )
     return out
@@ -218,9 +222,15 @@ def on_form_submit():
         tools += ASBC_TOOLS
     if use_file or use_demo_file:
         tools += UPLOAD_TOOLS
-    agent = LopeAgent(tools=tools)
+    agent = LOPEAgent(tools=tools)
     with st.spinner("Thinking..."):
         agent(txt)
+        # output = agent(txt)
+        # print(output[0])
+    # if 'concordance' in txt:
+    #     # media_box.table(pd.DataFrame(output[:5]).astype(str))
+    #     with media_box.container():
+    #         media_box.text('hi')
 
 
 with st.container():

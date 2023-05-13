@@ -1,4 +1,4 @@
-# lope-tools
+# LOPETools
 
 To just look at usage examples, check out `notebooks/openai.ipynb`
 

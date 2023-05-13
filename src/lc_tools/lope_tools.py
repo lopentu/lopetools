@@ -15,6 +15,7 @@ import httpx
 from langchain.tools import BaseTool
 import opencc
 from CwnGraph import CwnImage
+import walrus
 
 from tagger_api.schemas import TagOutput
 
@@ -27,15 +28,18 @@ t2s = opencc.OpenCC("t2s.json")
 s2t = opencc.OpenCC("s2t.json")
 BASE = Path(__file__).resolve().parent.parent.parent
 embedder = SentenceTransformer("distiluse-base-multilingual-cased-v1")
-p = str(BASE / 'other_data/cwn_definition_embeddings.pkl')
-with open(p, 'rb') as f:
+p = str(BASE / "other_data/cwn_definition_embeddings.pkl")
+with open(p, "rb") as f:
     data = pickle.load(f)
-    def_corpus = data['corpus']
-    def_embeddings = data['embeddings']
+    def_corpus = data["corpus"]
+    def_embeddings = data["embeddings"]
+
+db = walrus.Database(host="localhost", port=6379, db=0)
+asbc_index = db.Index("asbc")
 
 
 class ToolMixin:
-    def json_dumps(self, d: dict|list) -> str:
+    def json_dumps(self, d: dict | list) -> str:
         return json.dumps(d, default=str, ensure_ascii=False)
 
 
@@ -247,7 +251,7 @@ class QuerySimilarSenseFromCwnTool(BaseTool, ToolMixin):
         top_results = torch.topk(cos_scores, k=10)
         res = []
         for score, idx in zip(top_results.values, top_results.indices):
-            res.append({**def_corpus[idx], 'score': float(score)})
+            res.append({**def_corpus[idx], "score": float(score)})
         return self.json_dumps(res)
 
     async def _arun(self, query: str) -> str:
@@ -256,6 +260,24 @@ class QuerySimilarSenseFromCwnTool(BaseTool, ToolMixin):
         top_results = torch.topk(cos_scores, k=10)
         res = []
         for score, idx in zip(top_results.values, top_results.indices):
-            res.append({**def_corpus[idx], **{'score': float(score)}})
+            res.append({**def_corpus[idx], **{"score": float(score)}})
         return self.json_dumps(res)
 
+
+class QueryAsbcFullTextTool(BaseTool, ToolMixin):
+    name = "QueryAsbcFullText"
+    description = "輸入目標字串，得到目標字串在中研院平衡語料庫（ASBC）的前後文。"
+    return_direct = True
+
+    def _run(self, query: str) -> str:
+        res = asbc_index.search(query)
+        return self.json_dumps(res)
+
+    async def _arun(self, query: str) -> str:
+        res = asbc_index.search(query)
+        return self.json_dumps(res)
+
+        # for text in asbc_text:
+        #     if query in text:
+        #         res.append(text)
+        # return self.json_dumps(res)
