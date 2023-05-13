@@ -42,11 +42,12 @@ from lope_tools import (
 os.environ["TIKTOKEN_CACHE_DIR"] = ""
 BASE = Path(__file__).resolve().parent.parent
 load_dotenv(str(BASE / ".env"))
-openai.api_key = os.environ["OPENAI_API_KEY"]
+# openai.api_key = os.environ["OPENAI_API_KEY"]
 
 sheep = Image.open("./static/羊.png")
 
 st.set_page_config("LOPEGPT", page_icon=sheep, layout="wide")
+
 
 @st.cache_resource
 def load_demo_index(path):
@@ -62,6 +63,7 @@ def load_demo_index(path):
     )
     return tool
 
+
 def img_to_bytes(img_path):
     img_bytes = Path(img_path).read_bytes()
     encoded = base64.b64encode(img_bytes).decode()
@@ -73,6 +75,7 @@ def img_to_html(img_path):
         img_to_bytes(img_path)
     )
     return img_html
+
 
 CWN_TOOLS = [
     SenseTagTool(return_direct=True),
@@ -88,9 +91,7 @@ CWN_TOOLS = [
 ASBC_TOOLS = []
 
 upload_index = load_demo_index(str(BASE / "other_data/.llama_storage"))
-UPLOAD_TOOLS = [
-    upload_index
-]
+UPLOAD_TOOLS = [upload_index]
 
 
 col1, col2, col3 = st.columns(3)
@@ -115,7 +116,29 @@ with col3:
         unsafe_allow_html=True,
     )
 
+def on_api_key_form_submit():
+    openai.api_key = st.session_state["openai_api_key"]
+
+
 with st.sidebar:
+    st.session_state.setdefault("openai_api_key", "")
+    print(st.session_state["openai_api_key"])
+    with st.form("api_key_form"):
+        st.markdown(
+            "<h3 style='text-align: center;'>OpenAI API Key</h3>",
+            unsafe_allow_html=True,
+        )
+        st.text_input(
+            "OpenAI API Key",
+            type="password",
+            key="openai_api_key",
+            value=st.session_state["openai_api_key"],
+        )
+        submitted = st.form_submit_button(
+            "Submit",
+            on_click=on_api_key_form_submit,
+        )
+
     your_data = st.file_uploader(
         "Upload your data. Must contain 'Content' column.", type=["csv"]
     )
@@ -127,6 +150,7 @@ with st.sidebar:
 
 st.session_state.setdefault("chat_history", [])
 st.session_state.setdefault("upload_data", [])
+print(st.session_state["openai_api_key"])
 history = st.session_state["chat_history"]
 print("#" * 10, "history", "#" * 10)
 print(history)
@@ -146,6 +170,7 @@ class LOPEAgent:
             model_name="gpt-3.5-turbo",
             temperature=0,
             client=None,
+            openai_api_key=st.session_state["openai_api_key"],
             # stop=["Human: "],  # type: ignore
         )
         self.memory = ConversationTokenBufferMemory(
@@ -211,7 +236,7 @@ def format_chat_messages(messages) -> list[dict[str, str]]:
     return out
 
 
-def on_form_submit():
+def on_chat_form_submit():
     txt = st.session_state["user_input"]
     if not txt:
         return
@@ -256,7 +281,12 @@ with st.container():
             height=50,
             key="user_input",
         )
-        submitted = st.form_submit_button("Submit", on_click=on_form_submit)
+        submitted = st.form_submit_button(
+            "Submit",
+            on_click=on_chat_form_submit,
+            disabled=(not bool(st.session_state["openai_api_key"])),
+            help="Ensure API key is correct before proceeding.",
+        )
     media_box = st.empty()
 
 
