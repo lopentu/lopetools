@@ -1,0 +1,20 @@
+---
+version: '3.4'
+services:
+  weaviate:
+    command:
+      - --host
+      - 0.0.0.0
+      - --port
+      - '8000'
+      - --scheme
+      - http
+    image: semitechnologies/weaviate:1.19.6
+    network_mode: host
+    restart: always
+    env_file:
+      - ./weaviate.env
+    volumes:
+      - /mnt/md0/docker/weaviate:/var/lib/weaviate
+
+  

@@ -224,7 +224,6 @@ sketch
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/python,git,visualstudiocode,react
-.env
 *.whl*
 models
 */data
@@ -235,3 +234,4 @@ packages
 web/
 scripts/
 other_notebooks/
+*.env
