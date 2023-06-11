@@ -42,7 +42,7 @@ from lope_tools import (
 os.environ["TIKTOKEN_CACHE_DIR"] = ""
 BASE = Path(__file__).resolve().parent.parent
 load_dotenv(str(BASE / ".env"))
-# openai.api_key = os.environ["OPENAI_API_KEY"]
+openai.api_key = os.environ["OPENAI_API_KEY"]
 
 sheep = Image.open("./static/羊.png")
 
@@ -121,7 +121,7 @@ def on_api_key_form_submit():
 
 
 with st.sidebar:
-    st.session_state.setdefault("openai_api_key", "")
+    st.session_state.setdefault("openai_api_key", openai.api_key)
     print(st.session_state["openai_api_key"])
     with st.form("api_key_form"):
         st.markdown(
