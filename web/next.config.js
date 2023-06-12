@@ -3,7 +3,7 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 });
 
 module.exports = withBundleAnalyzer({
-  reactStrictMode: false,
+  reactStrictMode: true, // https://react.dev/learn/keeping-components-pure
   eslint: {
     ignoreDuringBuilds: true,
   },

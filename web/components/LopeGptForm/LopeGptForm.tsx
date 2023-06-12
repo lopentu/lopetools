@@ -1,8 +1,24 @@
 import { Flex, Textarea, Checkbox, Button, Group, Box } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import React, { useEffect, useState } from 'react';
+import { ChatMessageProps } from '../ChatHistory/ChatHistory';
 
 
-export function LopeGptForm() {
+
+export function LopeGptForm({ chatHistory, setChatHistory, openaiApiKey }: { chatHistory: ChatMessageProps[], setChatHistory: React.Dispatch<React.SetStateAction<ChatMessageProps[]>>, openaiApiKey: string }) {
+  const [rawHistory, setRawHistory] = useState([])
+
+  function call_api(text: string, useCwnTools: boolean, useAsbcTools: boolean) {
+    let payload = {
+      text: text,
+      use_cwn: useCwnTools,
+      use_asbc: useAsbcTools,
+      messages: rawHistory,
+      openai_api_key: openaiApiKey
+    }
+    fetch('http://localhost:8000/')
+  }
+
   const form = useForm({
     initialValues: {
       userInput: '',
@@ -11,9 +27,17 @@ export function LopeGptForm() {
     }
   });
 
+
   return (
     <Box mx="auto">
-      <form onSubmit={form.onSubmit((values) => console.log(values))}>
+      <form onSubmit={form.onSubmit((values) => {
+        let role = 'User';
+        let text = values.userInput;
+        let key = `${role}-${text}`
+        console.log(values)
+        setChatHistory([...chatHistory, { role, text, key }])
+        form.reset();
+      })}>
         <Flex
           gap="md"
           justify="flex-start"
@@ -38,6 +62,9 @@ export function LopeGptForm() {
           withAsterisk
           label="User Input"
           placeholder="Enter your text here"
+          autosize
+          required
+          minRows={5}
           {...form.getInputProps('userInput')}
         />
 

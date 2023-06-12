@@ -3,10 +3,17 @@ import { ScrollArea, Mark, Text, ThemeIcon } from '@mantine/core';
 
 import { FaRobot, FaUser, FaUserNinja } from 'react-icons/fa';
 
-function ChatMessage({ role, message }: { role: string, message: string }) {
+export type ChatMessageProps = {
+  role: string,
+  text: string,
+  key: string,
+}
+
+
+function ChatMessage({ role, text: text }: ChatMessageProps) {
   return (
     <>
-      {role === 'user' ?
+      {role === 'User' ?
         <Text
           m="md"
           size="md"
@@ -16,7 +23,7 @@ function ChatMessage({ role, message }: { role: string, message: string }) {
             p="xs"
             color='blue'
             sx={{ borderRadius: '10px' }}
-          >{message}
+          >{text}
           </Mark>
           <ThemeIcon
             variant="light"
@@ -47,7 +54,7 @@ function ChatMessage({ role, message }: { role: string, message: string }) {
             p="xs"
             color='red'
             sx={{ borderRadius: '10px' }}
-          >{message}
+          >{text}
           </Mark>
         </Text>
       }
@@ -55,14 +62,8 @@ function ChatMessage({ role, message }: { role: string, message: string }) {
   )
 }
 
-export function ChatHistory() {
+export function ChatHistory({ chatHistory }: { chatHistory: ChatMessageProps[] }) {
   const { height, width } = useViewportSize();
-  let chatHistory = [
-    { 'role': 'user', 'text': 'Hello', 'key': 1 },
-    { 'role': 'bot', 'text': 'Hello', 'key': 2 },
-    { 'role': 'user', 'text': 'Wat', 'key': 3 },
-    { 'role': 'bot', 'text': 'Hello', 'key': 4 },
-  ]
   return (
     <ScrollArea
       h={height / 2}
@@ -71,7 +72,7 @@ export function ChatHistory() {
       {chatHistory.map((message) => {
         return <ChatMessage
           role={message.role}
-          message={message.text}
+          text={message.text}
           key={message.key} />
       })}
     </ScrollArea>

@@ -17,7 +17,7 @@ import opencc
 from CwnGraph import CwnImage
 import walrus
 
-from tagger_api.schemas import TagOutput
+from tagger.schemas import TagOutput
 
 cwn = CwnImage.latest()
 with open("../data/senseid_to_metadata.json", "r") as f:
