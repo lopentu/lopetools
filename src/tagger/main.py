@@ -2,11 +2,11 @@ from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parent.parent.resolve() / "dwsd-beta"))
 
-from fastapi import FastAPI, APIRouter, Query
-from DistilTag import DistilTag
+from fastapi import FastAPI, APIRouter, Query  # noqa: E402
+from DistilTag import DistilTag  # noqa: E402
 
-from schemas import TagOutput, TaggedToken
-from dotted_wsd import DottedWsdTagger
+from schemas import TagOutput, TaggedToken  # noqa: E402
+from dotted_wsd import DottedWsdTagger  # noqa: E402
 
 distil_tagger = DistilTag()
 dwsd = DottedWsdTagger()
