@@ -4,8 +4,7 @@ import pickle
 from pathlib import Path
 import sys
 
-if "../tagger_api" not in sys.path:
-    sys.path.append("../tagger_api")
+
 import json
 import re
 import torch
@@ -17,10 +16,14 @@ import opencc
 from CwnGraph import CwnImage
 import walrus
 
-from tagger.schemas import TagOutput
+BASE = Path(__file__).resolve().parent.parent.parent.resolve()
+sys.path.append(str(BASE / "src"))
+
+from tagger.schemas import TagOutput  # noqa: E402
 
 cwn = CwnImage.latest()
-with open("../data/senseid_to_metadata.json", "r") as f:
+# with open("../data/senseid_to_metadata.json", "r") as f:
+with BASE.joinpath("data/senseid_to_metadata.json").open("r") as f:
     asbc_freq = json.load(f)
 
 API_URL = "http://140.112.147.128:8000/api"

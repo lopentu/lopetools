@@ -16,9 +16,21 @@ export function LopeGptForm({ chatHistory, setChatHistory, openaiApiKey }: { cha
       messages: rawHistory,
       openai_api_key: openaiApiKey
     }
-    fetch('http://localhost:8000/')
+    fetch('http://localhost:3002/', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(responseData => {
+      console.log(responseData)
+    })
+    .catch(error => {
+      console.error(error)
+    });
   }
-
   const form = useForm({
     initialValues: {
       userInput: '',
@@ -36,6 +48,7 @@ export function LopeGptForm({ chatHistory, setChatHistory, openaiApiKey }: { cha
         let key = `${role}-${text}`
         console.log(values)
         setChatHistory([...chatHistory, { role, text, key }])
+        call_api(values.userInput, values.useCwnTools, values.useAsbcTools)
         form.reset();
       })}>
         <Flex

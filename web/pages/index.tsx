@@ -5,13 +5,14 @@ import { ChatHistory, ChatMessageProps } from '../components/ChatHistory/ChatHis
 
 export default function HomePage() {
   const [chatHistory, setChatHistory] = useState<ChatMessageProps[]>([])
+  const [openaiApiKey, setOpenaiApiKey] = useState<string>('')
 
   return (
     <>
       <Container size="sm">
         <Title order={1}>LopeGPT</Title>
         <ChatHistory chatHistory={chatHistory} />
-        <LopeGptForm chatHistory={chatHistory} setChatHistory={setChatHistory} />
+        <LopeGptForm openaiApiKey={openaiApiKey} chatHistory={chatHistory} setChatHistory={setChatHistory} />
       </Container>
     </>
   );

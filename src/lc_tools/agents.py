@@ -4,11 +4,10 @@ import os
 import re
 import sys
 
-if "../src/" not in sys.path:
-    sys.path.append("../src/lc_tools/")
-    sys.path.append("../src/")
 
 from pathlib import Path
+# BASE = Path(__file__).resolve().parent.parent
+# sys.path.append(str(BASE / "src"))
 
 from dotenv import load_dotenv
 from langchain.chat_models import ChatOpenAI
@@ -16,17 +15,9 @@ from langchain.agents import initialize_agent, AgentType, Tool
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationTokenBufferMemory
 from langchain.schema import messages_from_dict, messages_to_dict
-from llama_index import (
-    Document,
-    GPTVectorStoreIndex,
-    StorageContext,
-    load_index_from_storage,
-)
-import openai
-import pandas as pd
 
 
-from lope_tools import (
+from src.lc_tools.lope_tools import (
     SenseTagTool,
     QuerySenseFromDefinitionTool,
     QuerySenseFromLemmaTool,
