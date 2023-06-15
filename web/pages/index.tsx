@@ -10,10 +10,7 @@ export default function HomePage() {
     <>
       <Container size="sm">
         <ChatHistory chatHistory={chatHistory} />
-        <LopeGptForm
-          chatHistory={chatHistory}
-          setChatHistory={setChatHistory}
-        />
+        <LopeGptForm chatHistory={chatHistory} setChatHistory={setChatHistory} />
       </Container>
     </>
   );
