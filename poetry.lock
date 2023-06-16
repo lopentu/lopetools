@@ -317,7 +317,7 @@ description = ""
 optional = false
 python-versions = "*"
 files = []
-develop = true
+develop = false
 
 [package.dependencies]
 gdown = ">=4.4.0"
@@ -2385,4 +2385,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "38afa9db59a00adf9a199de4ff2f34b040c03523134111c3149746925da3c951"
+content-hash = "f43dddcb70c37296c90039dea45fc1b43fff6bd0321d69c2d306258ecab40d64"

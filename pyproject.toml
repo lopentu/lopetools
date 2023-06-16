@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-CwnGraph = {path = "./src/CwnGraph", develop = true}
+CwnGraph = {path = "./src/CwnGraph", develop = false}
 fastapi = "^0.97.0"
 loguru = "^0.7.0"
 pydantic = "^1.10.9"
