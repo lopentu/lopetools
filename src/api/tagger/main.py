@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
-sys.path.append(str(Path(__file__).parent.parent.resolve() / "dwsd-beta"))
+# BASE = Path(__file__).resolve().parent.parent.parent
+# sys.path.append(str(BASE / "dwsd-beta"))
 
 from fastapi import FastAPI, APIRouter, Query  # noqa: E402
 from DistilTag import DistilTag  # noqa: E402
@@ -11,14 +12,10 @@ from dotted_wsd import DottedWsdTagger  # noqa: E402
 distil_tagger = DistilTag()
 dwsd = DottedWsdTagger()
 
-app = FastAPI(
-    title="LOPE API", description="API for LOPE tools", openapi_url="/openapi.json"
-)
-
-api_router = APIRouter()
+tagger_router = APIRouter()
 
 
-@api_router.get("/tag/", response_model=TagOutput, status_code=200)
+@tagger_router.get("/tag/", response_model=TagOutput, status_code=200)
 def tag(
     text: str = Query(
         ..., description="The text to be tagged", example="星巴克宣布明天起停賣星巴克"
@@ -40,9 +37,9 @@ def tag(
 # @cwn_api_router.get("/", status_code=200)
 
 
-app.include_router(api_router, prefix="/api")
+# app.include_router(api_router, prefix="/api")
 
-if __name__ == "__main__":
-    import uvicorn
+# if __name__ == "__main__":
+#     import uvicorn
 
-    uvicorn.run(app, host="127.0.0.1", port=8001, log_level="debug")
+#     uvicorn.run(app, host="127.0.0.1", port=8001, log_level="debug")

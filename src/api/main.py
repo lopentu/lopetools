@@ -1,5 +1,6 @@
 
-from src.api.v1.endpoints import create_app  # noqa: E402
+from api import create_app  # noqa: E402
 
 
+# run from src.api.main:app
 app = create_app()
