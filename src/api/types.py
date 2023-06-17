@@ -11,4 +11,4 @@ class APIRequest(BaseModel):
     messages: list  # used for loading previous messages
     use_cwn: bool
     use_asbc: bool
-    openai_api_key: str
+    openai_api_key: str | None = None
