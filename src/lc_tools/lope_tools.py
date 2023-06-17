@@ -4,7 +4,6 @@ import pickle
 from pathlib import Path
 import sys
 
-
 import json
 import re
 import torch
@@ -16,10 +15,10 @@ import opencc
 from CwnGraph import CwnImage
 import walrus
 
-BASE = Path(__file__).resolve().parent.parent.parent.resolve()
-sys.path.append(str(BASE / "src"))
+BASE = Path(__file__).resolve().parent.parent.parent
+# sys.path.append(str(BASE / "src"))
 
-from tagger.schemas import TagOutput  # noqa: E402
+from api.tagger.schemas import TagOutput  # noqa: E402
 
 cwn = CwnImage.latest()
 # with open("../data/senseid_to_metadata.json", "r") as f:

@@ -16,5 +16,53 @@ services:
       - ./weaviate.env
     volumes:
       - /mnt/md0/docker/weaviate:/var/lib/weaviate
+  frontend:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.frontend
+    command:
+      - npm
+      - run
+      - dev
+      - --port
+      - '8005'
+    tty: true
+    image: frontend
+    volumes: 
+      - ./web:/app
+    environment:
+      - NODE_ENV=development
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+    network_mode: host
+  backend:
+    build:
+      context: ./
+      dockerfile: Dockerfile.backend
+    command:
+      - uvicorn
+      - api.main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "3000"
+      - --reload
+    tty: true
+    image: backend
+    volumes: 
+      - ./src:/app/src
+    env_file:
+      ./.env
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+    network_mode: host
+    
+
 
   

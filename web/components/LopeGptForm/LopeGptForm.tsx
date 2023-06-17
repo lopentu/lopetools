@@ -56,7 +56,6 @@ export function LopeGptForm({
           let role = 'User';
           let text = values.userInput;
           let time = new Date().getTime();
-          console.log(time);
           let key = `${role}-${text}-${time}`;
           console.log(values);
           setChatHistory([...chatHistory, { role, text, key }]);

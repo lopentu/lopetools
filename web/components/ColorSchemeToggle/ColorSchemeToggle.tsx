@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { ActionIcon, Group, useMantineColorScheme } from '@mantine/core';
 import { IconSun, IconMoonStars } from '@tabler/icons';
 
 export function ColorSchemeToggle() {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+  const [ counter , setCounter ] = useState(0);  // TODO: show meme modal after 20 clicks
 
   return (
       <ActionIcon

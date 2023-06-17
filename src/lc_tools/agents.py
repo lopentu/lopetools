@@ -11,13 +11,13 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from langchain.chat_models import ChatOpenAI
-from langchain.agents import initialize_agent, AgentType, Tool
+from langchain.agents import initialize_agent, AgentType
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationTokenBufferMemory
 from langchain.schema import messages_from_dict, messages_to_dict
 
 
-from src.lc_tools.lope_tools import (
+from lc_tools.lope_tools import (
     SenseTagTool,
     QuerySenseFromDefinitionTool,
     QuerySenseFromLemmaTool,
