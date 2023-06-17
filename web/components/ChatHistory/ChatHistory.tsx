@@ -1,5 +1,5 @@
 import { useViewportSize } from '@mantine/hooks';
-import { ScrollArea, Mark, Text, ThemeIcon } from '@mantine/core';
+import { ScrollArea, Mark, Text, ThemeIcon, useMantineTheme, Group, Flex } from '@mantine/core';
 
 import { FaRobot, FaUser, FaUserNinja } from 'react-icons/fa';
 
@@ -10,26 +10,41 @@ export type ChatMessageProps = {
 };
 
 function ChatMessage({ role, text: text }: ChatMessageProps) {
+  const theme = useMantineTheme();
   return (
     <>
-      {role === 'User' ? (
-        <Text m="md" size="md" ta="end">
-          <Mark p="xs" color="blue" sx={{ borderRadius: '10px' }}>
+      {role === 'human' ? (
+        <Flex justify="flex-end">
+          <Text
+            sx={{ 
+              backgroundColor: theme.colorScheme === 'dark' ? theme.colors.blue[9] : theme.colors.blue[3], 
+              padding: '0.5em', borderRadius: '10px' }}
+            m="md"
+            size="md"
+            ta="end"
+          >
             {text}
-          </Mark>
-          <ThemeIcon variant="light" color="blue" size="lg" radius="xl" ml="sm">
+          </Text>
+          <ThemeIcon variant="filled" color="blue" size="lg" radius="xl">
             <FaUserNinja />
           </ThemeIcon>
-        </Text>
+        </Flex>
       ) : (
-        <Text m="md" size="md" ta="start">
-          <ThemeIcon variant="light" color="red" size="lg" radius="xl" mr="sm">
+        <Flex justify="flex-start">
+          <ThemeIcon variant="filled" color="grape" size="lg" radius="xl" mr="sm">
             <FaRobot />
           </ThemeIcon>
-          <Mark p="xs" color="red" sx={{ borderRadius: '10px' }}>
+          <Text
+            sx={{ 
+              backgroundColor: theme.colorScheme === 'dark'? theme.colors.grape[9] : theme.colors.grape[3], 
+              padding: '10px', borderRadius: '10px' }}
+            m="xs"
+            size="md"
+            ta="start"
+          >
             {text}
-          </Mark>
-        </Text>
+          </Text>
+        </Flex>
       )}
     </>
   );
@@ -38,7 +53,7 @@ function ChatMessage({ role, text: text }: ChatMessageProps) {
 export function ChatHistory({ chatHistory }: { chatHistory: ChatMessageProps[] }) {
   const { height, width } = useViewportSize();
   return (
-    <ScrollArea h={height / 3} type="auto">
+    <ScrollArea mih={height / 2} type="auto">
       {chatHistory.map((message) => {
         return <ChatMessage role={message.role} text={message.text} key={message.key} />;
       })}
