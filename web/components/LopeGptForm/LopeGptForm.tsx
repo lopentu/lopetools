@@ -34,7 +34,7 @@ export function LopeGptForm({
       openaiApiKey: openaiApiKey,
     };
     console.log(payload);
-    fetch('http://127.0.0.1:8003/agent/', {
+    fetch('https://lope.linguistics.ntu.edu.tw/agent/', {
       method: 'POST',
       body: JSON.stringify(payload),
       headers: {
