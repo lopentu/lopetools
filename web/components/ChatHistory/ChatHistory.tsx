@@ -72,7 +72,7 @@ export function ChatHistory({
   const counter = useContext(ColorSchemeCounterContext);
   return (
     <>
-      {(counter !== 0) && (counter % 10 === 0) && <Image src={shukai} fill={true} alt="shukai" />}
+      {counter !== 0 && counter % 10 === 0 && <Image src={shukai} fill={true} alt="shukai" />}
       <ScrollArea h={height / 2} type="auto">
         {chatHistory.map((message) => {
           return <ChatMessage role={message.role} text={message.text} key={message.key} />;
