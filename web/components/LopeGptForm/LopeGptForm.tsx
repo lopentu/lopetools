@@ -109,7 +109,6 @@ export function LopeGptForm({
               sx={(theme) => ({
                 backgroundColor: theme.colorScheme === 'dark' ? theme.colors.lime[9] : theme.colors.lime[5],
               })}
-              // color="lime"
               leftIcon={<GrPowerReset size="1rem" />}
             >
               Reset Chat
