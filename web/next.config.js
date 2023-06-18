@@ -7,4 +7,5 @@ module.exports = withBundleAnalyzer({
   eslint: {
     ignoreDuringBuilds: true,
   },
+  basePath: '/lopeGPT'
 });
