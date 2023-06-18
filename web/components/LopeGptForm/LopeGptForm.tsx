@@ -1,4 +1,4 @@
-import { Flex, Textarea, Checkbox, Button, Group, Box, PasswordInput } from '@mantine/core';
+import { Flex, Textarea, Checkbox, Button, Group, Box, PasswordInput, Loader } from '@mantine/core';
 import { useForm, hasLength } from '@mantine/form';
 import React, { useEffect, useState } from 'react';
 
@@ -22,7 +22,8 @@ export function LopeGptForm({
       messages: rawHistory,
       openaiApiKey: openaiApiKey,
     };
-    fetch('http://localhost:3002/', {
+    console.log(payload);
+    fetch('http://127.0.0.1:8003/agent/', {
       method: 'POST',
       body: JSON.stringify(payload),
       headers: {
@@ -31,6 +32,8 @@ export function LopeGptForm({
     })
       .then((response) => response.json())
       .then((responseData) => {
+        setRawHistory(responseData['raw']);
+        setChatHistory(responseData['formatted']);
         console.log(responseData);
       })
       .catch((error) => {
@@ -44,22 +47,31 @@ export function LopeGptForm({
       useAsbcTools: true,
       openaiApiKey: openaiApiKey,
     },
-    validate: {
-      openaiApiKey: hasLength(51, 'OpenAI API Key must be 51 characters long'),
-    },
+    // validate: {
+    //   openaiApiKey: hasLength(51, 'OpenAI API Key must be 51 characters long'),
+    // },
   });
 
   return (
     <Box mx="auto">
       <form
         onSubmit={form.onSubmit((values) => {
-          let role = 'User';
+          let role = 'human';
           let text = values.userInput;
-          let time = new Date().getTime();
-          let key = `${role}-${text}-${time}`;
+          let idx = chatHistory.length + 1;
+          // let time = new Date().getTime();
+          let key = `${role}-${text}-${idx}`;
           console.log(values);
-          setChatHistory([...chatHistory, { role, text, key }]);
-          setOpenaiApiKey(values.openaiApiKey);
+          setChatHistory([
+            ...chatHistory,
+            { role, text, key },
+            {
+              role: 'ai',
+              text: <Loader variant="dots" size="sm" color="white" />,
+              key: `${role}-${text}-${idx + 1}`,
+            },
+          ]);
+          // setOpenaiApiKey(values.openaiApiKey);
           call_api(values.userInput, values.useCwnTools, values.useAsbcTools);
           form.reset();
         })}
@@ -71,20 +83,20 @@ export function LopeGptForm({
               label="Use CWN Tools"
               {...form.getInputProps('useCwnTools', { type: 'checkbox' })}
             />
-            <Checkbox
+            {/* <Checkbox
               mt="md"
               label="Use ASBC Tools"
               {...form.getInputProps('useAsbcTools', { type: 'checkbox' })}
-            />
+            /> */}
           </Group>
-          <PasswordInput
+          {/* <PasswordInput
             placeholder="OpenAI API Key"
             label="OpenAI API Key"
             size="xs"
             required
             withAsterisk
             {...form.getInputProps('openaiApiKey')}
-          />
+          /> */}
         </Group>
         {/* </Flex> */}
         <Textarea

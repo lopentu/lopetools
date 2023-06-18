@@ -1,11 +1,11 @@
 import { useViewportSize } from '@mantine/hooks';
-import { ScrollArea, Mark, Text, ThemeIcon, useMantineTheme, Group, Flex } from '@mantine/core';
+import { ScrollArea, Mark, Text, ThemeIcon, useMantineTheme, Group, Flex, Loader } from '@mantine/core';
 
 import { FaRobot, FaUser, FaUserNinja } from 'react-icons/fa';
 
 export type ChatMessageProps = {
   role: string;
-  text: string;
+  text: string | JSX.Element;
   key: string;
 };
 
@@ -17,7 +17,7 @@ function ChatMessage({ role, text: text }: ChatMessageProps) {
         <Flex justify="flex-end">
           <Text
             sx={{ 
-              backgroundColor: theme.colorScheme === 'dark' ? theme.colors.blue[9] : theme.colors.blue[3], 
+              backgroundColor: theme.colorScheme === 'dark' ? theme.colors.cyan[9] : theme.colors.cyan[3], 
               padding: '0.5em', borderRadius: '10px' }}
             m="md"
             size="md"
@@ -25,18 +25,18 @@ function ChatMessage({ role, text: text }: ChatMessageProps) {
           >
             {text}
           </Text>
-          <ThemeIcon variant="filled" color="blue" size="lg" radius="xl">
+          <ThemeIcon variant="filled" color="cyan" size="lg" radius="xl">
             <FaUserNinja />
           </ThemeIcon>
         </Flex>
       ) : (
         <Flex justify="flex-start">
-          <ThemeIcon variant="filled" color="grape" size="lg" radius="xl" mr="sm">
+          <ThemeIcon variant="filled" color="pink" size="lg" radius="xl" mr="sm">
             <FaRobot />
           </ThemeIcon>
           <Text
             sx={{ 
-              backgroundColor: theme.colorScheme === 'dark'? theme.colors.grape[9] : theme.colors.grape[3], 
+              backgroundColor: theme.colorScheme === 'dark'? theme.colors.pink[9] : theme.colors.pink[3], 
               padding: '10px', borderRadius: '10px' }}
             m="xs"
             size="md"
