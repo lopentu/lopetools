@@ -1,6 +1,17 @@
-import { Flex, Textarea, Checkbox, Button, Group, Box, PasswordInput, Loader } from '@mantine/core';
+import {
+  Flex,
+  Textarea,
+  Checkbox,
+  Button,
+  Group,
+  Box,
+  PasswordInput,
+  Loader,
+  ActionIcon,
+} from '@mantine/core';
 import { useForm, hasLength } from '@mantine/form';
 import React, { useEffect, useState } from 'react';
+import { GrPowerReset } from 'react-icons/gr';
 
 import { ChatMessageProps } from '../ChatHistory/ChatHistory';
 
@@ -88,6 +99,18 @@ export function LopeGptForm({
               label="Use ASBC Tools"
               {...form.getInputProps('useAsbcTools', { type: 'checkbox' })}
             /> */}
+          </Group>
+          <Group position="right">
+            <Button
+              onClick={() => setChatHistory([])}
+              sx={(theme) => ({
+                backgroundColor: theme.colorScheme === 'dark' ? theme.colors.lime[9] : theme.colors.lime[5],
+              })}
+              // color="lime"
+              leftIcon={<GrPowerReset size="1rem" />}
+            >
+              Reset Chat
+            </Button>
           </Group>
           {/* <PasswordInput
             placeholder="OpenAI API Key"
