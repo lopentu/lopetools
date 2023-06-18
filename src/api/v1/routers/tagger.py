@@ -13,11 +13,11 @@ from dotted_wsd import DottedWsdTagger  # noqa: E402
 distil_tagger = DistilTag()
 dwsd = DottedWsdTagger()
 
-tagger_router = APIRouter(prefix="/tagger", tags=["tagger"])
+tagger_router = APIRouter(prefix="/tag", tags=["tagger"])
 
 
 @tagger_router.get("/", response_model=TagOutput, status_code=200)
-def tag(
+async def tag(
     text: str = Query(..., description="The text to be tagged", example="星巴克宣布明天起停賣星巴克")
 ):
     tagged_text = distil_tagger.tag(text)
