@@ -1,4 +1,10 @@
-import { JSXElementConstructor, ReactElement, ReactFragment, ReactPortal, useState } from 'react';
+import React, {
+  JSXElementConstructor,
+  ReactElement,
+  ReactFragment,
+  ReactPortal,
+  useState,
+} from 'react';
 import {
   AppShell,
   Anchor,
@@ -31,6 +37,8 @@ export function MyAppShell(props: {
     | ReactPortal
     | null
     | undefined;
+  counter: number;
+  setCounter: React.Dispatch<React.SetStateAction<number>>;
 }) {
   const theme = useMantineTheme();
   const [opened, setOpened] = useState(false);
@@ -81,7 +89,7 @@ export function MyAppShell(props: {
                 LopeGPT
               </Text>
             </Group>
-              <ColorSchemeToggle />
+            <ColorSchemeToggle counter={props.counter} setCounter={props.setCounter} />
           </Group>
           {/* <MediaQuery largerThan="sm" styles={{ display: 'none' }}>
               <Burger

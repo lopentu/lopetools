@@ -1,16 +1,12 @@
+import { useContext } from 'react';
 import { useViewportSize } from '@mantine/hooks';
-import {
-  ScrollArea,
-  Mark,
-  Text,
-  ThemeIcon,
-  useMantineTheme,
-  Group,
-  Flex,
-  Loader,
-} from '@mantine/core';
+import Image from 'next/image';
+import { ScrollArea, Mark, Text, ThemeIcon, useMantineTheme, Flex } from '@mantine/core';
 
 import { FaRobot, FaUser, FaUserNinja } from 'react-icons/fa';
+
+import shukai from '../../public/images/shukai-horse.png';
+import { ColorSchemeCounterContext } from '../ColorSchemeToggle/ColorSchemeCounterContext';
 
 export type ChatMessageProps = {
   role: string;
@@ -73,11 +69,15 @@ export function ChatHistory({
   setChatHistory: React.Dispatch<React.SetStateAction<ChatMessageProps[]>>;
 }) {
   const { height, width } = useViewportSize();
+  const counter = useContext(ColorSchemeCounterContext);
   return (
-    <ScrollArea h={height / 1.5} type="auto">
-      {chatHistory.map((message) => {
-        return <ChatMessage role={message.role} text={message.text} key={message.key} />;
-      })}
-    </ScrollArea>
+    <>
+      {counter % 10 === 0 && <Image src={shukai} fill={true} alt="shukai" />}
+      <ScrollArea h={height / 1.5} type="auto">
+        {chatHistory.map((message) => {
+          return <ChatMessage role={message.role} text={message.text} key={message.key} />;
+        })}
+      </ScrollArea>
+    </>
   );
 }

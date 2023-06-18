@@ -235,3 +235,4 @@ scripts/
 other_notebooks/
 *.env
 .next
+public

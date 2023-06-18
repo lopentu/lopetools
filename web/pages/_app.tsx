@@ -6,10 +6,12 @@ import { MantineProvider, ColorScheme, ColorSchemeProvider } from '@mantine/core
 import { Notifications } from '@mantine/notifications';
 
 import { MyAppShell } from '../components/MyAppShell/MyAppShell';
+import { ColorSchemeCounterContext } from '../components/ColorSchemeToggle/ColorSchemeCounterContext';
 
 export default function App(props: AppProps & { colorScheme: ColorScheme }) {
   const { Component, pageProps } = props;
   const [colorScheme, setColorScheme] = useState<ColorScheme>(props.colorScheme);
+  const [counter, setCounter] = useState(0);
 
   const toggleColorScheme = (value?: ColorScheme) => {
     const nextColorScheme = value || (colorScheme === 'dark' ? 'light' : 'dark');
@@ -27,8 +29,10 @@ export default function App(props: AppProps & { colorScheme: ColorScheme }) {
 
       <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
         <MantineProvider theme={{ colorScheme }} withGlobalStyles withNormalizeCSS>
-          <MyAppShell>
-          <Component {...pageProps} />
+          <MyAppShell counter={counter} setCounter={setCounter}>
+            <ColorSchemeCounterContext.Provider value={counter}>
+              <Component {...pageProps} />
+            </ColorSchemeCounterContext.Provider>
           </MyAppShell>
           <Notifications />
         </MantineProvider>
