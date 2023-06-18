@@ -104,14 +104,22 @@ class LOPEAgent:
                 self.agent_chain.predict(input=text)
             else:
                 text += self.SUFFIX
-                self.agent_chain.run(input=text)
+                self.agent_chain.run(text)
                 # output = json.loads(self.agent_chain.run(input=text))
         except Exception as e:
             print("########## EXCEPTION ##########")
+            print(str(e))
+            if 'Could not parse LLM Output:' in str(e):
+                ai_message = str(e).replace('Could not parse LLM Output:', '')
+            else:
+                ai_message = "對不起我無法回答您的問題。"
             print(e)
             self.memory.chat_memory.add_user_message(text)
-            self.memory.chat_memory.add_ai_message("對不起我無法回答您的問題。")
+            self.memory.chat_memory.add_ai_message(ai_message)
         return self.export_messages()
+    
+    async def arun(self, text):
+        return await self.agent_chain.arun(input=text)
 
     def export_messages(self):
         raw = messages_to_dict(self.memory.chat_memory.messages)
@@ -123,11 +131,13 @@ class LOPEAgent:
 
     def format_chat_messages(self, messages) -> list[dict[str, str]]:
         out = []
-        for m in messages:
+        for idx, m in enumerate(messages):
+            text = m["data"]["content"].replace(self.SUFFIX, "").strip()
             out.append(
                 {
                     "role": m["type"],
-                    "text": m["data"]["content"].replace(self.SUFFIX, "").strip(),
+                    "text": text,
+                    "key": f"{m['type']}-{text}-{idx}"
                 }
             )
         return out
