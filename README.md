@@ -70,7 +70,7 @@ To start the agent, run
 
 ```bash
 cd src
-uvicorn api.main:app --reload --port 8003 --host 0.0.0.0
+uvicorn api.main:app --reload --port 8003
 ```
 
 To start the tagger, run
