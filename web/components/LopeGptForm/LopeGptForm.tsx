@@ -102,7 +102,10 @@ export function LopeGptForm({
           </Group>
           <Group position="right">
             <Button
-              onClick={() => setChatHistory([])}
+              onClick={() => {
+                setChatHistory([])
+                setRawHistory([])
+              }}
               sx={(theme) => ({
                 backgroundColor: theme.colorScheme === 'dark' ? theme.colors.lime[9] : theme.colors.lime[5],
               })}
