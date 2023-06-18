@@ -128,16 +128,17 @@ class QuerySenseBaseTool(BaseTool, ToolMixin):
         res = {}
         senses = cwn.find_senses(**{search_method: f"^{text}$"})
         for sense in senses:
-            res[sense.head_word] = self.expand_sense(sense)
+            res[sense.id] = self.expand_sense(sense)
 
         res = self.json_dumps(res)
+        # logger.info(res)
         return res
 
     async def _base_arun(self, text, search_method: str) -> str:
         res = {}
         senses = cwn.find_senses(**{search_method: text})
         for sense in senses:
-            res[sense.head_word] = self.expand_sense(sense)
+            res[sense.id] = self.expand_sense(sense)
 
         res = self.json_dumps(res)
         return res
