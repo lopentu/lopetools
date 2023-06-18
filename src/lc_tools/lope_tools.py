@@ -146,7 +146,8 @@ class QuerySenseBaseTool(BaseTool, ToolMixin):
     @staticmethod
     def expand_sense(sense):
         res = {}
-        keep = ["definition", "all_examples", "facets", "head_word", "id", "pos"]
+        # keep = ["definition", "all_examples", "facets", "head_word", "id", "pos"]
+        keep = ["definition", "pos", "all_examples"]  # trying to reduce token usage
         attrs = [
             d
             for d in dir(sense)
@@ -158,6 +159,8 @@ class QuerySenseBaseTool(BaseTool, ToolMixin):
                 continue
             if callable(retrieved):
                 retrieved = retrieved()
+            if attr == "all_examples":
+                retrieved = retrieved[:1]  # too many examples goes over context limit
             res[attr] = retrieved
 
         return res
