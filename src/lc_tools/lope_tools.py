@@ -1,19 +1,20 @@
 # https://python.langchain.com/en/latest/modules/agents/tools/custom_tools.html#multi-argument-tools
 # https://cwngraph.readthedocs.io/en/latest/
-import pickle
-from pathlib import Path
-import sys
-
 import json
+from pathlib import Path
+import pickle
 import re
-import torch
-from sentence_transformers import SentenceTransformer, util
+import sys
 
 import httpx
 from langchain.tools import BaseTool
+from loguru import logger
 import opencc
-from CwnGraph import CwnImage
+from sentence_transformers import SentenceTransformer, util
+import torch
 import walrus
+
+from CwnGraph import CwnImage
 
 BASE = Path(__file__).resolve().parent.parent.parent
 # sys.path.append(str(BASE / "src"))
@@ -25,7 +26,8 @@ cwn = CwnImage.latest()
 with BASE.joinpath("data/senseid_to_metadata.json").open("r") as f:
     asbc_freq = json.load(f)
 
-API_URL = "http://140.112.147.128:8000/api"
+# API_URL = "http://140.112.147.128:8003"
+API_URL = "http://localhost:3001"
 t2s = opencc.OpenCC("t2s.json")
 s2t = opencc.OpenCC("s2t.json")
 BASE = Path(__file__).resolve().parent.parent.parent
@@ -77,7 +79,12 @@ class SenseTagTool(BaseTool, ToolMixin):
             out = []
             response: TagOutput = client.get(
                 f"{API_URL}/tag/", params={"text": text}, timeout=600.0
-            ).json()["tagged_text"]
+            ).json()
+            # response: TagOutput = client.post(
+            #     f"{API_URL}/tag/", data={"text": text}, timeout=600.0
+            # ).json()
+            response = response["tagged_text"]  # type: ignore
+            logger.info(response)
             for sent in response:
                 tmp = []
                 for tok in sent:
@@ -99,7 +106,9 @@ class SenseTagTool(BaseTool, ToolMixin):
                 await client.get(
                     f"{API_URL}/tag/", params={"text": text}, timeout=600.0
                 )
-            ).json()["tagged_text"]
+            ).json()
+            response = response["tagged_text"]  # type: ignore
+            logger.info(response)
             for sent in response:
                 tmp = []
                 for tok in sent:
@@ -108,7 +117,7 @@ class SenseTagTool(BaseTool, ToolMixin):
                         self.format_text(tok)
                         # f"([詞] {tok['token']} || [詞性] {tok['tag']} || [詞意] {tok['gloss']})"
                     )
-                out.append("\n".join(tmp))
+                out.append(tmp)
 
             # out = "。".join(out)
             return self.json_dumps(out)
