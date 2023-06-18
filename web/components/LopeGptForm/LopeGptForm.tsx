@@ -90,7 +90,7 @@ export function LopeGptForm({
         <Group position="apart" grow>
           <Group>
             <Checkbox
-              mt="md"
+              my="md"
               label="Use CWN Tools"
               {...form.getInputProps('useCwnTools', { type: 'checkbox' })}
             />
