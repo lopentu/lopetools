@@ -59,6 +59,8 @@ sequenceDiagram
 
 I tried combining the agent and tagger into one app, but the agent hangs when it calls the tagger. I must be doing something wrong. 🤷‍♂️
 
+Use something like `tmux` to start the frontend, agent, and tagger in separate terminals so they can run even when you close the terminal.
+
 To start the frontend, run
 
 ```bash
