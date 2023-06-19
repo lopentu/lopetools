@@ -11,7 +11,8 @@ import {
 } from '@mantine/core';
 import { useForm, hasLength } from '@mantine/form';
 import React, { useEffect, useState } from 'react';
-import { GrPowerReset } from 'react-icons/gr';
+import { AiOutlineSend, AiOutlineUndo } from 'react-icons/ai';
+
 
 import { ChatMessageProps } from '../ChatHistory/ChatHistory';
 
@@ -58,9 +59,9 @@ export function LopeGptForm({
       useAsbcTools: true,
       openaiApiKey: openaiApiKey,
     },
-    // validate: {
-    //   openaiApiKey: hasLength(51, 'OpenAI API Key must be 51 characters long'),
-    // },
+    validate: {
+      openaiApiKey: hasLength(51, 'OpenAI API Key must be 51 characters long'),
+    },
   });
 
   return (
@@ -82,7 +83,7 @@ export function LopeGptForm({
               key: `${role}-${text}-${idx + 1}`,
             },
           ]);
-          // setOpenaiApiKey(values.openaiApiKey);
+          setOpenaiApiKey(values.openaiApiKey);
           call_api(values.userInput, values.useCwnTools, values.useAsbcTools);
           form.reset();
         })}
@@ -100,28 +101,15 @@ export function LopeGptForm({
               {...form.getInputProps('useAsbcTools', { type: 'checkbox' })}
             /> */}
           </Group>
-          <Group position="right">
-            <Button
-              onClick={() => {
-                setChatHistory([])
-                setRawHistory([])
-              }}
-              sx={(theme) => ({
-                backgroundColor: theme.colorScheme === 'dark' ? theme.colors.lime[9] : theme.colors.lime[5],
-              })}
-              leftIcon={<GrPowerReset size="1rem" />}
-            >
-              Reset Chat
-            </Button>
-          </Group>
-          {/* <PasswordInput
+          <Group position="right"></Group>
+          <PasswordInput
             placeholder="OpenAI API Key"
             label="OpenAI API Key"
             size="xs"
             required
             withAsterisk
             {...form.getInputProps('openaiApiKey')}
-          /> */}
+          />
         </Group>
         {/* </Flex> */}
         <Textarea
@@ -135,7 +123,20 @@ export function LopeGptForm({
         />
 
         <Group position="center" mt="md">
-          <Button type="submit">Submit</Button>
+          <Button leftIcon={<AiOutlineSend size="1rem" />} type="submit">Submit</Button>
+          <Button
+            onClick={() => {
+              setChatHistory([]);
+              setRawHistory([]);
+            }}
+            sx={(theme) => ({
+              backgroundColor:
+                theme.colorScheme === 'dark' ? theme.colors.lime[9] : theme.colors.lime[5],
+            })}
+            leftIcon={<AiOutlineUndo size="1rem" />}
+          >
+            Reset Chat
+          </Button>
         </Group>
       </form>
     </Box>
