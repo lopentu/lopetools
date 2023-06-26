@@ -25,6 +25,7 @@ export function LopeGptForm({
 }) {
   const [rawHistory, setRawHistory] = useState([]);
   const [openaiApiKey, setOpenaiApiKey] = useState<string>('');
+  const isDemo = true;
 
   function call_api(text: string, useCwnTools: boolean, useAsbcTools: boolean) {
     let payload = {
@@ -52,6 +53,14 @@ export function LopeGptForm({
         console.error(error);
       });
   }
+
+  let validate = {}
+
+  if (!isDemo){
+    validate = {
+      openaiApiKey: hasLength(51, 'OpenAI API Key must be 51 characters long'),
+    }
+  }
   const form = useForm({
     initialValues: {
       userInput: '',
@@ -59,9 +68,10 @@ export function LopeGptForm({
       useAsbcTools: true,
       openaiApiKey: openaiApiKey,
     },
-    validate: {
-      openaiApiKey: hasLength(51, 'OpenAI API Key must be 51 characters long'),
-    },
+    validate: validate
+    // validate: {
+    //   openaiApiKey: hasLength(51, 'OpenAI API Key must be 51 characters long'),
+    // },
   });
 
   return (
@@ -71,7 +81,6 @@ export function LopeGptForm({
           let role = 'human';
           let text = values.userInput;
           let idx = chatHistory.length + 1;
-          // let time = new Date().getTime();
           let key = `${role}-${text}-${idx}`;
           console.log(values);
           setChatHistory([
@@ -101,15 +110,14 @@ export function LopeGptForm({
               {...form.getInputProps('useAsbcTools', { type: 'checkbox' })}
             /> */}
           </Group>
-          <Group position="right"></Group>
-          <PasswordInput
+          {!isDemo && <PasswordInput
             placeholder="OpenAI API Key"
             label="OpenAI API Key"
             size="xs"
             required
             withAsterisk
             {...form.getInputProps('openaiApiKey')}
-          />
+          />}
         </Group>
         {/* </Flex> */}
         <Textarea
