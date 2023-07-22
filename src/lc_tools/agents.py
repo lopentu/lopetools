@@ -6,6 +6,7 @@ import sys
 
 
 from pathlib import Path
+
 # BASE = Path(__file__).resolve().parent.parent
 # sys.path.append(str(BASE / "src"))
 
@@ -25,6 +26,7 @@ from lc_tools.lope_tools import (
     QueryAsbcSenseFrequencyTool,
     QueryRelationsFromSenseIdTool,
     QuerySimilarSenseFromCwnTool,
+    QueryPTTSearchTool,
     # QueryAsbcFullTextTool
 )
 
@@ -48,6 +50,10 @@ CWN_TOOLS = [
 
 ASBC_TOOLS = []
 
+PTT_TOOLS = [
+    QueryPTTSearchTool(return_direct=False),
+]
+
 
 class LOPEAgent:
     SUFFIX = """注意一：'action_input'只輸入字串，不要輸入JSON格式或其他的格式。
@@ -57,14 +63,16 @@ class LOPEAgent:
     # 注意二：在最終答案前面一定要附上 'Final Answer'。
     # 注意三：有了答案之後，不要做額外的分析。"""
 
-    def __init__(self, use_cwn, use_asbc, openai_api_key, messages=None):
+    def __init__(self, use_cwn, use_asbc, use_ptt, openai_api_key, messages=None):
         self.tools = []
         if use_cwn:
             self.tools = CWN_TOOLS
         if use_asbc:
             self.tools += ASBC_TOOLS
+        if use_ptt:
+            self.tools += PTT_TOOLS
         self.llm = ChatOpenAI(
-            model_name="gpt-3.5-turbo",
+            model="gpt-3.5-turbo",
             temperature=0,
             client=None,
             openai_api_key=openai_api_key,
@@ -109,15 +117,15 @@ class LOPEAgent:
         except Exception as e:
             print("########## EXCEPTION ##########")
             print(str(e))
-            if 'Could not parse LLM Output:' in str(e):
-                ai_message = str(e).replace('Could not parse LLM Output:', '')
+            if "Could not parse LLM Output:" in str(e):
+                ai_message = str(e).replace("Could not parse LLM Output:", "")
             else:
                 ai_message = "對不起我無法回答您的問題。"
             print(e)
             self.memory.chat_memory.add_user_message(text)
             self.memory.chat_memory.add_ai_message(ai_message)
         return self.export_messages()
-    
+
     async def arun(self, text):
         return await self.agent_chain.arun(input=text)
 
@@ -134,10 +142,6 @@ class LOPEAgent:
         for idx, m in enumerate(messages):
             text = m["data"]["content"].replace(self.SUFFIX, "").strip()
             out.append(
-                {
-                    "role": m["type"],
-                    "text": text,
-                    "key": f"{m['type']}-{text}-{idx}"
-                }
+                {"role": m["type"], "text": text, "key": f"{m['type']}-{text}-{idx}"}
             )
         return out

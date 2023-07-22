@@ -1,22 +1,30 @@
 # https://python.langchain.com/en/latest/modules/agents/tools/custom_tools.html#multi-argument-tools
 # https://cwngraph.readthedocs.io/en/latest/
+import dataclasses
 import json
 from pathlib import Path
+import os
 import pickle
 import re
 import sys
 
+from dotenv import load_dotenv
 import httpx
 from langchain.tools import BaseTool
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.retrievers.weaviate_hybrid_search import WeaviateHybridSearchRetriever
 from loguru import logger
 import opencc
 from sentence_transformers import SentenceTransformer, util
 import torch
 import walrus
+import weaviate
 
 from CwnGraph import CwnImage
+from .mytypes import ContentItem
 
 BASE = Path(__file__).resolve().parent.parent.parent
+load_dotenv(BASE.joinpath(".env"))
 # sys.path.append(str(BASE / "src"))
 
 from api.tagger.schemas import TagOutput  # noqa: E402
@@ -40,6 +48,23 @@ with open(p, "rb") as f:
 
 db = walrus.Database(host="localhost", port=6379, db=0)
 asbc_index = db.Index("asbc")
+
+WV_CLIENT = weaviate.Client(
+    url="http://localhost:8000",
+    auth_client_secret=weaviate.AuthApiKey(api_key=os.environ["WEAVIATE_ADMIN_PASS"]),
+    timeout_config=(5, 30),  # (connect timeout, read timeout) # type: ignore
+    additional_headers={"X-OpenAI-Api-Key": os.environ["OPENAI_API_KEY"]},
+)
+IGNORE_ATTRS = ["media", "post_id", ]
+PTT_ATTRS = [field.name for field in dataclasses.fields(ContentItem)]
+PTT_RETRIEVER = WeaviateHybridSearchRetriever(
+    client=WV_CLIENT,
+    k=5,
+    alpha=0.5,  # weighting for each search algorithm (alpha = 0 (sparse, BM25), alpha = 1 (dense), alpha = 0.5 (equal weight for sparse and dense))
+    index_name="ContentItem",
+    text_key="text",
+    attributes=PTT_ATTRS,  # include these attributes in the 'metadata' field of the search results
+)
 
 
 class ToolMixin:
@@ -277,6 +302,20 @@ class QuerySimilarSenseFromCwnTool(BaseTool, ToolMixin):
         for score, idx in zip(top_results.values, top_results.indices):
             res.append({**def_corpus[idx], **{"score": float(score)}})
         return self.json_dumps(res)
+
+
+class QueryPTTSearchTool(BaseTool, ToolMixin):
+    name = "PTTSearch"
+    description = "輸入目標字串，得到PTT上的文章標題、內文、推文。"
+    return_direct = True
+
+    def _run(self, query: str) -> str:
+        res = PTT_RETRIEVER.get_relevant_documents(query)
+        return self.json_dumps(res)
+
+    def _arun(self, query: str) -> str:
+        res = PTT_RETRIEVER.get_relevant_documents(query)
+        return self.json_dumps([r.json() for r in res])
 
 
 class QueryAsbcFullTextTool(BaseTool, ToolMixin):

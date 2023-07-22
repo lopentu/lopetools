@@ -29,6 +29,7 @@ async def call_model(request: APIRequest) -> APIResponse:
     messages = request.messages
     use_asbc = request.use_asbc
     use_cwn = request.use_cwn
+    use_ptt = request.use_ptt
     openai_api_key = request.openai_api_key
     if not openai_api_key:
         openai_api_key = os.environ["OPENAI_API_KEY"]
@@ -36,6 +37,7 @@ async def call_model(request: APIRequest) -> APIResponse:
         messages=messages,
         use_asbc=use_asbc,
         use_cwn=use_cwn,
+        use_ptt=use_ptt,
         openai_api_key=openai_api_key,
     )
     response = agent(text)

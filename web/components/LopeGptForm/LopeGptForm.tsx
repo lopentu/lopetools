@@ -27,11 +27,12 @@ export function LopeGptForm({
   const [openaiApiKey, setOpenaiApiKey] = useState<string>('');
   const isDemo = true;
 
-  function call_api(text: string, useCwnTools: boolean, useAsbcTools: boolean) {
+  function call_api(text: string, useCwnTools: boolean, useAsbcTools: boolean, usePttTools: boolean) {
     let payload = {
       text: text,
       use_cwn: useCwnTools,
       use_asbc: useAsbcTools,
+      use_ptt: usePttTools,
       messages: rawHistory,
       openaiApiKey: openaiApiKey,
     };
@@ -56,7 +57,7 @@ export function LopeGptForm({
 
   let validate = {}
 
-  if (!isDemo){
+  if (!isDemo) {
     validate = {
       openaiApiKey: hasLength(51, 'OpenAI API Key must be 51 characters long'),
     }
@@ -66,6 +67,7 @@ export function LopeGptForm({
       userInput: '',
       useCwnTools: true,
       useAsbcTools: true,
+      usePttTools: true,
       openaiApiKey: openaiApiKey,
     },
     validate: validate
@@ -93,7 +95,7 @@ export function LopeGptForm({
             },
           ]);
           setOpenaiApiKey(values.openaiApiKey);
-          call_api(values.userInput, values.useCwnTools, values.useAsbcTools);
+          call_api(values.userInput, values.useCwnTools, values.useAsbcTools, values.usePttTools);
           form.reset();
         })}
       >
@@ -104,7 +106,12 @@ export function LopeGptForm({
               label="Use CWN Tools"
               {...form.getInputProps('useCwnTools', { type: 'checkbox' })}
             />
-            {/* <Checkbox
+            <Checkbox
+              my="md"
+              label="Use PTT Tools"
+              {...form.getInputProps('usePttTools', { type: 'checkbox' })}
+              />
+              {/* <Checkbox
               mt="md"
               label="Use ASBC Tools"
               {...form.getInputProps('useAsbcTools', { type: 'checkbox' })}
