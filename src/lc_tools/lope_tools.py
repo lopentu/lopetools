@@ -59,7 +59,7 @@ IGNORE_ATTRS = [
 PTT_ATTRS = [field.name for field in dataclasses.fields(ContentItem)]
 PTT_RETRIEVER = WeaviateHybridSearchRetriever(
     client=WV_CLIENT,
-    k=5,
+    k=10,
     alpha=0.5,  # weighting for each search algorithm (alpha = 0 (sparse, BM25), alpha = 1 (dense), alpha = 0.5 (equal weight for sparse and dense))
     index_name="ContentItem",
     text_key="text",

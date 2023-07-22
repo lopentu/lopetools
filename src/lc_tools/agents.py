@@ -52,7 +52,7 @@ ASBC_TOOLS = [
 ]
 
 PTT_TOOLS = [
-    QueryPTTSearchTool(return_direct=False),
+    QueryPTTSearchTool(return_direct=True),
 ]
 
 
@@ -73,7 +73,7 @@ class LOPEAgent:
         if use_ptt:
             self.tools += PTT_TOOLS
         self.llm = ChatOpenAI(
-            model="gpt-3.5-turbo",
+            model="gpt-3.5-turbo-16k",
             temperature=0,
             client=None,
             openai_api_key=openai_api_key,
