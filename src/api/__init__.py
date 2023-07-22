@@ -6,6 +6,7 @@ from .v1.routers import agents
 
 def create_app() -> FastAPI:
 
+    # can't add tagger to the same app because it hangs
     app = FastAPI()
 
     app.include_router(agents.agent_router)
