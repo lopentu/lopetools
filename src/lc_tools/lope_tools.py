@@ -6,7 +6,6 @@ from pathlib import Path
 import os
 import pickle
 import re
-import sys
 
 from dotenv import load_dotenv
 import httpx
@@ -14,6 +13,7 @@ from langchain.tools import BaseTool
 from langchain.retrievers.weaviate_hybrid_search import WeaviateHybridSearchRetriever
 from loguru import logger
 import opencc
+import nh3
 from sentence_transformers import SentenceTransformer, util
 import torch
 import walrus
@@ -52,7 +52,10 @@ WV_CLIENT = weaviate.Client(
     timeout_config=(5, 30),  # (connect timeout, read timeout) # type: ignore
     additional_headers={"X-OpenAI-Api-Key": os.environ["OPENAI_API_KEY"]},
 )
-IGNORE_ATTRS = ["media", "post_id", ]
+IGNORE_ATTRS = [
+    "media",
+    "post_id",
+]
 PTT_ATTRS = [field.name for field in dataclasses.fields(ContentItem)]
 PTT_RETRIEVER = WeaviateHybridSearchRetriever(
     client=WV_CLIENT,
@@ -66,6 +69,7 @@ PTT_RETRIEVER = WeaviateHybridSearchRetriever(
 
 class ToolMixin:
     def json_dumps(self, d: dict | list) -> str:
+        # return json.dumps(nh3.clean(d), default=str, ensure_ascii=False)
         return json.dumps(d, default=str, ensure_ascii=False)
 
 
@@ -322,19 +326,31 @@ class QueryAsbcFullTextTool(BaseTool, ToolMixin):
         "搜尋可以包含可以包含集合操作（例如 AND、OR），布林運算，並使用括號來指示運算優先順序"
     )
     return_direct = True
-    top_k = 25
+    top_k = 50
+    clean_metadata = True
+
+    def _clean_metadata(self, res: list[str]) -> list[str]:
+        cleaned = []
+        for line in res:
+            tmp = []
+            chars = line.split()
+            for char in chars:
+                tmp.append(char.split("-")[0])
+            cleaned.append("".join(tmp))
+        # cleaned = "\n".join(cleaned)
+        return cleaned
 
     def _run(self, query: str) -> str:
-        res = asbc_index.search(query)[:self.top_k]
-        res = [r['content'] for r in res]
+        res = asbc_index.search(query)[: self.top_k]
+        res = [r["content"] for r in res]
+        if self.clean_metadata:
+            res = self._clean_metadata(res)
+
         return self.json_dumps(res)
 
     async def _arun(self, query: str) -> str:
-        res = asbc_index.search(query)[:self.top_k]
-        res = [r['content'] for r in res]
+        res = asbc_index.search(query)[: self.top_k]
+        res = [r["content"] for r in res]
+        if self.clean_metadata:
+            res = self._clean_metadata(res)
         return self.json_dumps(res)
-
-        # for text in asbc_text:
-        #     if query in text:
-        #         res.append(text)
-        # return self.json_dumps(res)

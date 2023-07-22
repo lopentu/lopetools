@@ -32,6 +32,7 @@ function ChatMessage({ role, text: text }: ChatMessageProps) {
             ta="end"
           >
             {text}
+            {/* <div dangerouslySetInnerHTML={{ __html: text}} /> */}
           </Text>
           <ThemeIcon variant="filled" color="cyan" size="lg" radius="xl">
             <FaUserNinja />
@@ -54,6 +55,7 @@ function ChatMessage({ role, text: text }: ChatMessageProps) {
             ta="start"
           >
             {text}
+            {/* <div dangerouslySetInnerHTML={{ __html: text}} /> */}
           </Text>
         </Flex>
       )}
