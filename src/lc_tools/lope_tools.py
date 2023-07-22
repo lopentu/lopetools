@@ -11,7 +11,6 @@ import sys
 from dotenv import load_dotenv
 import httpx
 from langchain.tools import BaseTool
-from langchain.embeddings import OpenAIEmbeddings
 from langchain.retrievers.weaviate_hybrid_search import WeaviateHybridSearchRetriever
 from loguru import logger
 import opencc
@@ -30,11 +29,9 @@ load_dotenv(BASE.joinpath(".env"))
 from api.tagger.schemas import TagOutput  # noqa: E402
 
 cwn = CwnImage.latest()
-# with open("../data/senseid_to_metadata.json", "r") as f:
 with BASE.joinpath("data/senseid_to_metadata.json").open("r") as f:
     asbc_freq = json.load(f)
 
-# API_URL = "http://140.112.147.128:8003"
 API_URL = "http://localhost:3001"
 t2s = opencc.OpenCC("t2s.json")
 s2t = opencc.OpenCC("s2t.json")
@@ -320,15 +317,21 @@ class QueryPTTSearchTool(BaseTool, ToolMixin):
 
 class QueryAsbcFullTextTool(BaseTool, ToolMixin):
     name = "QueryAsbcFullText"
-    description = "輸入目標字串，得到目標字串在中研院平衡語料庫（ASBC）的前後文。"
+    description = (
+        "輸入搜尋字串，得到目標字串在中研院平衡語料庫（ASBC）的前後文。"
+        "搜尋可以包含可以包含集合操作（例如 AND、OR），布林運算，並使用括號來指示運算優先順序"
+    )
     return_direct = True
+    top_k = 25
 
     def _run(self, query: str) -> str:
-        res = asbc_index.search(query)
+        res = asbc_index.search(query)[:self.top_k]
+        res = [r['content'] for r in res]
         return self.json_dumps(res)
 
     async def _arun(self, query: str) -> str:
-        res = asbc_index.search(query)
+        res = asbc_index.search(query)[:self.top_k]
+        res = [r['content'] for r in res]
         return self.json_dumps(res)
 
         # for text in asbc_text:

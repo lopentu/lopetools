@@ -27,7 +27,7 @@ from lc_tools.lope_tools import (
     QueryRelationsFromSenseIdTool,
     QuerySimilarSenseFromCwnTool,
     QueryPTTSearchTool,
-    # QueryAsbcFullTextTool
+    QueryAsbcFullTextTool,
 )
 
 
@@ -45,10 +45,11 @@ CWN_TOOLS = [
     QueryAsbcSenseFrequencyTool(),
     QueryRelationsFromSenseIdTool(),
     QuerySimilarSenseFromCwnTool(return_direct=True),
-    # QueryAsbcFullTextTool(return_direct=True),
 ]
 
-ASBC_TOOLS = []
+ASBC_TOOLS = [
+    QueryAsbcFullTextTool(return_direct=True),
+]
 
 PTT_TOOLS = [
     QueryPTTSearchTool(return_direct=False),

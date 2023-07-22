@@ -110,12 +110,12 @@ export function LopeGptForm({
               my="md"
               label="Use PTT Tools"
               {...form.getInputProps('usePttTools', { type: 'checkbox' })}
-              />
-              {/* <Checkbox
-              mt="md"
+            />
+            <Checkbox
+              my="md"
               label="Use ASBC Tools"
               {...form.getInputProps('useAsbcTools', { type: 'checkbox' })}
-            /> */}
+            />
           </Group>
           {!isDemo && <PasswordInput
             placeholder="OpenAI API Key"
