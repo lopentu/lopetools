@@ -72,14 +72,14 @@ To start the agent, run
 
 ```bash
 cd src
-uvicorn api.main:app --reload --port 8003
+uvicorn api.main:app --reload --port 8003 --host 0.0.0.0
 ```
 
 To start the tagger, run
 
 ```bash
 cd src
-uvicorn api.tagger.main:app --reload --port 3001
+uvicorn api.tagger.main:app --reload --port 3001 
 ```
 
 ## Docker
