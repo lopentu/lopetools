@@ -26,6 +26,7 @@ function ChatMessage({ role, text: text }: ChatMessageProps) {
                 theme.colorScheme === 'dark' ? theme.colors.cyan[9] : theme.colors.cyan[3],
               padding: '0.5em',
               borderRadius: '10px',
+              whiteSpace: 'pre-wrap',
             }}
             m="md"
             size="md"
@@ -49,6 +50,7 @@ function ChatMessage({ role, text: text }: ChatMessageProps) {
                 theme.colorScheme === 'dark' ? theme.colors.pink[9] : theme.colors.pink[3],
               padding: '10px',
               borderRadius: '10px',
+              whiteSpace: 'pre-wrap',
             }}
             m="xs"
             size="md"
