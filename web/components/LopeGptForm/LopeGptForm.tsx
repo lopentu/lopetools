@@ -98,9 +98,8 @@ export function LopeGptForm({
           console.log("Values")
           console.log(values)
           call_api(values.userInput, values.useCwnTools, values.useAsbcTools, values.usePttTools);
-          form.reset();
           form.setValues({
-            openaiApiKey: key,
+            userInput: "",
           })
         })}
       >
