@@ -25,7 +25,7 @@ export function LopeGptForm({
 }) {
   const [rawHistory, setRawHistory] = useState([]);
   const [openaiApiKey, setOpenaiApiKey] = useState<string>('');
-  const isDemo = true;
+  const isDemo = false;
 
   function call_api(text: string, useCwnTools: boolean, useAsbcTools: boolean, usePttTools: boolean) {
     let payload = {
@@ -95,8 +95,13 @@ export function LopeGptForm({
             },
           ]);
           setOpenaiApiKey(values.openaiApiKey);
+          console.log("Values")
+          console.log(values)
           call_api(values.userInput, values.useCwnTools, values.useAsbcTools, values.usePttTools);
           form.reset();
+          form.setValues({
+            openaiApiKey: key,
+          })
         })}
       >
         <Group position="apart" grow>
@@ -111,11 +116,11 @@ export function LopeGptForm({
               label="Use PTT Tools"
               {...form.getInputProps('usePttTools', { type: 'checkbox' })}
             />
-            <Checkbox
+            {/* <Checkbox
               my="md"
               label="Use ASBC Tools"
               {...form.getInputProps('useAsbcTools', { type: 'checkbox' })}
-            />
+            /> */}
           </Group>
           {!isDemo && <PasswordInput
             placeholder="OpenAI API Key"
