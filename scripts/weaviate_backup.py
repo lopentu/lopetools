@@ -48,7 +48,10 @@ def main(
         timeout_config=(5, 99999),
     )
     result = client.backup.create(
-        backup_id=backup_name, backend=backend, wait_for_completion=True, include_classes=['TestContentItem']
+        backup_id=backup_name,
+        backend=backend,
+        wait_for_completion=True,
+        # include_classes=["TestContentItem"],
     )
     logger.info(result)
 
