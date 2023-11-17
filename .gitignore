@@ -231,7 +231,6 @@ other_data
 .vscode
 packages
 **/__pycache__
-scripts/
 other_notebooks/
 *.env
 .next
