@@ -9,7 +9,7 @@ services:
       - '8000'
       - --scheme
       - http
-    image: semitechnologies/weaviate:1.19.6
+    image: cr.weaviate.io/semitechnologies/weaviate:1.19.6
     network_mode: host
     restart: always
     env_file:
